@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crop Rotation Crash Test</title>
+<meta name="description" content="Test a crop rotation against 34 years of real NASA POWER weather: crashes, soil carbon, water and better rotations for your priorities. NASA Space Apps Challenge 2026.">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="#">
+      <img src="assets/logo.svg" alt="" width="40" height="40">
+      <span data-i18n="title">Crop Rotation Crash Test</span>
+    </a>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="ru">RU</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1 data-i18n="title">Crop Rotation Crash Test</h1>
+    <p class="tagline" data-i18n="tagline"></p>
+    <p class="hero-note">
+      <span class="lb" data-l="en">NASA Space Apps Challenge 2026 · “Field Shift: Adapting Farms with NASA Data” · data: NASA POWER (MERRA-2 &amp; CERES) + ISRIC SoilGrids</span>
+      <span class="lb" data-l="ru">NASA Space Apps Challenge 2026 · «Field Shift: Adapting Farms with NASA Data» · данные: NASA POWER (MERRA-2 и CERES) + ISRIC SoilGrids</span>
+    </p>
+  </section>
+
+  <!-- STEP 1: FARM -->
+  <section class="card step" id="step-farm">
+    <h2><span class="num">1</span><span data-i18n="step1"></span></h2>
+    <div class="farm-grid">
+      <div>
+        <div id="map" class="map" aria-label="map"></div>
+        <p class="small muted" id="map-msg"></p>
+      </div>
+      <div>
+        <p class="label" data-i18n="presets"></p>
+        <div id="presets" class="chips"></div>
+        <p class="label" data-i18n="orMap"></p>
+        <div class="row">
+          <label><span data-i18n="lat"></span><input id="lat" type="number" step="0.01" min="-60" max="70" value="51.35"></label>
+          <label><span data-i18n="lon"></span><input id="lon" type="number" step="0.01" min="-180" max="180" value="71.00"></label>
+        </div>
+        <button type="button" id="btn-load" class="btn secondary" data-i18n="loadNasa"></button>
+        <p id="data-status" class="status" role="status"></p>
+
+        <fieldset class="soil">
+          <legend data-i18n="soil"></legend>
+          <div class="row three">
+            <label><span data-i18n="clay"></span><input id="clay" type="number" min="2" max="70" step="0.5"></label>
+            <label><span data-i18n="sand"></span><input id="sand" type="number" min="2" max="95" step="0.5"></label>
+            <label><span data-i18n="soc"></span><input id="socg" type="number" min="1" max="120" step="0.5"></label>
+          </div>
+          <p class="small muted" id="soil-src"></p>
+          <p class="small" id="soil-awc"></p>
+        </fieldset>
+        <div class="toggles">
+          <label class="check"><input type="checkbox" id="irr"> <span data-i18n="irrigation"></span></label>
+          <label class="inline" id="quota-wrap" hidden><span data-i18n="quota"></span> <input id="quota" type="number" min="0" max="1500" step="25" value="400"></label>
+          <label class="check"><input type="checkbox" id="straw" checked> <span data-i18n="straw"></span></label>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2: PLAN -->
+  <section class="card step" id="step-plan">
+    <h2><span class="num">2</span><span data-i18n="step2"></span></h2>
+    <p class="muted small" data-i18n="planHint"></p>
+    <div id="plan" class="plan"></div>
+  </section>
+
+  <!-- STEP 3: PRIORITIES -->
+  <section class="card step" id="step-prio">
+    <h2><span class="num">3</span><span data-i18n="step3"></span></h2>
+    <p class="muted small" data-i18n="prioHint"></p>
+    <div class="sliders">
+      <label><span data-i18n="pProfit"></span><input type="range" min="0" max="5" value="3" id="w-profit"><output></output></label>
+      <label><span data-i18n="pReliability"></span><input type="range" min="0" max="5" value="4" id="w-reliability"><output></output></label>
+      <label><span data-i18n="pSoil"></span><input type="range" min="0" max="5" value="3" id="w-soil"><output></output></label>
+      <label><span data-i18n="pWater"></span><input type="range" min="0" max="5" value="2" id="w-water"><output></output></label>
+    </div>
+    <div class="scenario">
+      <span class="label" data-i18n="scenario"></span>
+      <label class="radio"><input type="radio" name="sc" value="hist" checked> <span data-i18n="scHist"></span></label>
+      <label class="radio"><input type="radio" name="sc" value="warm"> <span data-i18n="scWarm"></span></label>
+      <label class="radio"><input type="radio" name="sc" value="hot"> <span data-i18n="scHot"></span></label>
+    </div>
+    <p class="label" data-i18n="cands"></p>
+    <div id="cands" class="chips cands"></div>
+    <details class="assump">
+      <summary data-i18n="assumptions"></summary>
+      <div class="table-wrap"><table id="assump-table"></table></div>
+    </details>
+    <div class="run-row">
+      <button type="button" id="btn-run" class="btn primary big" data-i18n="run"></button>
+      <div id="progress" class="progress" hidden><div></div><span></span></div>
+    </div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="results" hidden>
+    <div class="card verdict" id="verdict"></div>
+
+    <div class="card">
+      <h3 data-i18n="findings"></h3>
+      <ul id="findings" class="findings"></ul>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="mapTitle"></h3>
+      <p class="muted small" data-i18n="mapHint"></p>
+      <div id="crashmap" class="crashmap"></div>
+      <div class="legend" id="crashmap-legend"></div>
+      <div id="cell-info" class="cell-info small" aria-live="polite"></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card fix" id="fix"></div>
+      <div class="card">
+        <h3 data-i18n="perCrop"></h3>
+        <div class="table-wrap"><table id="percrop"></table></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="altTitle"></h3>
+      <div class="table-wrap"><table id="alts" class="alts"></table></div>
+    </div>
+
+    <div class="card">
+      <h3 data-i18n="scTitle"></h3>
+      <div class="table-wrap"><table id="sctable"></table></div>
+    </div>
+
+    <div class="grid2">
+      <div class="card"><h3 data-i18n="chIncome"></h3><div id="ch-income"></div></div>
+      <div class="card"><h3 data-i18n="chSoil"></h3><div id="ch-soil"></div></div>
+    </div>
+    <div class="card"><h3 data-i18n="chClimate"></h3><div id="ch-climate"></div><p class="small muted" id="ch-climate-hint"></p></div>
+    <div class="card"><h3 data-i18n="chValid"></h3><div id="ch-valid"></div><p class="small muted" id="ch-valid-hint"></p></div>
+
+    <div class="actions">
+      <button type="button" class="btn secondary" id="btn-print" data-i18n="print"></button>
+      <button type="button" class="btn secondary" id="btn-csv" data-i18n="csv"></button>
+    </div>
+  </section>
+
+  <!-- METHOD -->
+  <section class="card method">
+    <details>
+      <summary><h3 data-i18n="method"></h3></summary>
+      <div class="lb" data-l="en">
+        <h4>Idea</h4>
+        <p>Farm advice is usually abstract: “diversify”, “keep the soil covered”. A crash test is concrete. You enter <b>your</b> rotation, and we drive it through <b>every real season since 1991</b> at <b>your</b> field, using NASA satellite-era weather. You see exactly which years would have wrecked it and why. Then the tool searches hundreds of alternative rotations and shows the smallest change that makes your farm more profitable, more reliable, better for the soil and more water-efficient, weighted by <b>your</b> priorities.</p>
+        <h4>NASA data used</h4>
+        <ul>
+          <li><b>NASA POWER</b> daily API (Agroclimatology community), 1991–2025, for the exact field location: max/min air temperature (MERRA-2), corrected precipitation (MERRA-2 bias-corrected with GPCP), all-sky surface solar radiation (CERES SYN1deg / GEWEX SRB), relative humidity and wind speed at 2 m.</li>
+          <li><b>NASA MERRA-2 root-zone soil wetness (GWETROOT)</b> via POWER: an independent check of our soil-water model (see the validation chart).</li>
+          <li>Soil texture and organic carbon: <b>ISRIC SoilGrids 2.0</b> (250 m), which the farmer can replace with a lab soil test.</li>
+        </ul>
+        <h4>Model (transparent and simple on purpose)</h4>
+        <ul>
+          <li>Daily reference evapotranspiration: FAO-56 Penman-Monteith from the POWER variables.</li>
+          <li>Two-layer soil water balance, 1.8 m deep. Plant-available water comes from texture (Saxton &amp; Rawls 2006). Runoff uses the SCS curve number. Snow is accumulated, trapped by stubble and melted by degree-days. Bare-soil evaporation follows FAO-56 (two stages).</li>
+          <li>Crops: climate-driven sowing dates, development by growing degree-days, FAO-56 crop coefficients and water-stress factor, FAO-33 yield response to water (Ky). Added penalties: heat during flowering, spring and flowering frost, winter-kill of winter wheat (snow insulation), not ripening before the autumn frost, and disease when a crop comes back too soon.</li>
+          <li>Rotation effects: nitrogen credit after legumes, green manure and fallow; small break-crop bonus; penalty for cereal after cereal.</li>
+          <li>Soil organic carbon: a simplified ICBM-type balance. Humified straw and root inputs are weighed against decomposition driven by daily temperature and soil moisture; tilled black fallow decomposes faster.</li>
+          <li>Soil health score: the carbon trend plus the four USDA-NRCS soil health principles (keep soil covered, keep living roots, maximise diversity, minimise disturbance). Bare-soil exposure is counted on days with strong wind (≥ 6 m/s) or downpours (≥ 20 mm) from NASA POWER.</li>
+          <li>Crash test: the plan is run from every starting position, so every crop meets every real year. A <b>crash</b> is a season that loses more than half of the money put into the field; a <b>dent</b> is a loss-making season.</li>
+          <li>Climate scenarios: delta method (+1.5 °C; +2.5 °C and −10 % precipitation) applied to the real daily series.</li>
+        </ul>
+        <h4>Limitations (honestly)</h4>
+        <ul>
+          <li>This is a screening tool, not a calibrated crop model. Yield potentials, prices and costs are rough illustrative estimates; edit them to match your farm.</li>
+          <li>POWER weather is a ~50 km grid average and can miss local showers and hail.</li>
+          <li>Pests, weeds, fertiliser rates and varieties are represented only through simple rules.</li>
+          <li>SoilGrids organic carbon is often too high for steppe soils. Use a lab soil test if you can.</li>
+        </ul>
+      </div>
+      <div class="lb" data-l="ru">
+        <h4>Идея</h4>
+        <p>Советы фермерам обычно абстрактны: «разнообразьте культуры», «держите почву закрытой». Краш-тест конкретен. Вы вводите <b>свой</b> севооборот, а мы прогоняем его через <b>каждый реальный сезон с 1991 года</b> на <b>вашем</b> поле по погодным данным NASA. Вы видите, какие именно годы разбили бы план и почему. Потом сервис перебирает сотни альтернатив и показывает самое маленькое изменение, которое делает хозяйство доходнее, надёжнее, полезнее для почвы и экономнее по воде. Веса задаёте <b>вы</b>.</p>
+        <h4>Какие данные NASA используются</h4>
+        <ul>
+          <li><b>NASA POWER</b>, ежедневный API (сообщество Agroclimatology), 1991–2025, для точки поля: максимальная и минимальная температура (MERRA-2), скорректированные осадки (MERRA-2 с коррекцией по GPCP), солнечная радиация (CERES SYN1deg / GEWEX SRB), влажность воздуха и ветер на 2 м.</li>
+          <li><b>Влажность корнеобитаемого слоя NASA MERRA-2 (GWETROOT)</b> через POWER: независимая проверка нашей модели почвенной влаги (см. график проверки).</li>
+          <li>Механический состав и органический углерод почвы: <b>ISRIC SoilGrids 2.0</b> (250 м). Фермер может заменить их своим анализом почвы.</li>
+        </ul>
+        <h4>Модель (нарочно простая и прозрачная)</h4>
+        <ul>
+          <li>Суточная эталонная эвапотранспирация по Пенману–Монтейту (FAO-56) из переменных POWER.</li>
+          <li>Двухслойный водный баланс почвы глубиной 1,8 м. Доступная влага рассчитывается по механическому составу (Saxton &amp; Rawls 2006). Сток считается по кривой SCS. Снег накапливается, задерживается стернёй и тает по сумме положительных температур. Испарение с голой почвы считается по FAO-56 (две стадии).</li>
+          <li>Культуры: сроки сева определяются климатом, развитие идёт по сумме активных температур, водный стресс учитывается по коэффициентам FAO-56, отклик урожая на воду по FAO-33 (Ky). Есть штрафы за жару при цветении, весенние заморозки и заморозки в цветение, вымерзание озимых (с учётом снега), недозревание до осенних заморозков и болезни при слишком частом возврате культуры.</li>
+          <li>Эффекты севооборота: азот после бобовых, сидератов и пара; бонус предшественника; штраф за зерновые по зерновым.</li>
+          <li>Органический углерод почвы: упрощённый баланс типа ICBM. Гумифицированная солома и корни сравниваются с разложением, которое зависит от суточной температуры и влажности; чистый пар с обработками разлагает быстрее.</li>
+          <li>Оценка здоровья почвы: тренд углерода плюс 4 принципа здоровья почвы USDA-NRCS (почва закрыта, живые корни, разнообразие, минимум обработки). Опасные дни для голой почвы — это дни с сильным ветром (≥ 6 м/с) или ливнем (≥ 20 мм) по NASA POWER.</li>
+          <li>Краш-тест: план запускается со старта с каждой позиции, поэтому каждая культура встречает каждый реальный год. <b>Авария</b> — сезон, потерявший больше половины вложенных денег; <b>повреждение</b> — убыточный сезон.</li>
+          <li>Климатические сценарии: метод дельт (+1,5 °C; +2,5 °C и −10 % осадков) к реальным суточным рядам.</li>
+        </ul>
+        <h4>Ограничения (честно)</h4>
+        <ul>
+          <li>Это инструмент первичной оценки, а не откалиброванная модель урожая. Потенциал урожая, цены и затраты — примерные значения; исправьте их под своё хозяйство.</li>
+          <li>Погода POWER — среднее по ячейке ~50 км; локальные ливни и град могут не попасть.</li>
+          <li>Вредители, сорняки, удобрения и сорта учтены только простыми правилами.</li>
+          <li>SoilGrids часто завышает органический углерод в степных почвах. По возможности используйте лабораторный анализ.</li>
+        </ul>
+      </div>
+    </details>
+  </section>
+</main>
+
+<footer class="wrap foot small muted">
+  <span class="lb" data-l="en">Built by a team of 9th-grade students from Astana, Kazakhstan, for NASA Space Apps Challenge 2026. Weather: NASA POWER (power.larc.nasa.gov). Soil: ISRIC SoilGrids. NASA does not endorse this project.</span>
+  <span class="lb" data-l="ru">Сделано командой девятиклассников из Астаны (Казахстан) для NASA Space Apps Challenge 2026. Погода: NASA POWER (power.larc.nasa.gov). Почва: ISRIC SoilGrids. NASA не поддерживает и не одобряет этот проект официально.</span>
+</footer>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/crops.js"></script>
+<script src="js/model.js"></script>
+<script src="js/charts.js"></script>
+<script src="data/presets/index.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
