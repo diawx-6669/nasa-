@@ -477,6 +477,7 @@
     renderVerdict(R); renderFindings(R); renderCrashMap(R); renderWhy(R); renderFix(R); renderPerCrop(R);
     renderAlts(R); renderRisk(R); renderPrice(R); renderScenario(R); renderCharts(R);
     renderSowing(R); renderWater(R); renderFarm(R); renderCompare(R); renderOutlook(R);
+    renderRace(R); renderMC(R); renderRegions(R);
     renderY50(R); renderSHI(R); renderInsurance(R); renderStreak(R); renderWaterKg(R); renderWind(R); renderGame(R); renderVoiceBtn(R);
     if (window.FX) { FX.observe($('results')); FX.refresh($('results')); }
   }
@@ -1347,6 +1348,160 @@
     var w = window.open('', '_blank');
     if (!w) { FX.toast('Pop-up blocked'); return; }
     w.document.open(); w.document.write(html); w.document.close();
+  }
+
+
+  /* ================================================================ round 4: race, futures, regions */
+  /* ---------- Money race ---------- */
+  function renderRace(R) {
+    var box = $('race'), a = farmYears(R.best), b = farmYears(R.user);
+    var html = '<div class="race-head"><div><h3>' + esc(t('raceTitle')) + '</h3><p class="muted">' + esc(t('raceLead')) + '</p></div>' +
+      '<button type="button" class="btn primary" id="race-play">' + esc(t('racePlay')) + '</button></div>' +
+      '<div class="race-board"><div class="race-tag you"><span>' + esc(t('yourPlan')) + '</span><b id="race-you">0</b></div>' +
+      '<div class="race-year" id="race-year">' + b[0].year + '</div>' +
+      '<div class="race-tag ai"><span>' + esc(t('bestPlan')) + '</span><b id="race-ai">0</b></div></div>' +
+      '<svg class="race-svg" id="race-svg" viewBox="0 0 900 300" preserveAspectRatio="none" role="img" aria-label="' + esc(t('raceTitle')) + '"></svg>' +
+      '<p class="note-strong" id="race-end"></p>';
+    box.innerHTML = html;
+    var cumA = [], cumB = [], sa = 0, sb = 0;
+    a.forEach(function (x, i) { sa += x.m; sb += b[i] ? b[i].m : 0; cumA.push(sa); cumB.push(sb); });
+    var lo = Math.min(0, Math.min.apply(null, cumA.concat(cumB))), hi = Math.max.apply(null, cumA.concat(cumB, [1]));
+    var n = cumA.length, svg = $('race-svg'), NS = 'http://www.w3.org/2000/svg';
+    function X(i) { return 20 + i / (n - 1) * 860; }
+    function Y(v) { return 280 - (v - lo) / (hi - lo) * 260; }
+    function mk(tag, at) { var e = document.createElementNS(NS, tag); for (var k in at) e.setAttribute(k, at[k]); svg.appendChild(e); return e; }
+    mk('line', { x1: 20, x2: 880, y1: Y(0), y2: Y(0), class: 'race-zero' });
+    var pa = mk('path', { class: 'race-ai', d: '' }), pb = mk('path', { class: 'race-you', d: '' });
+    var da = mk('circle', { r: 6, class: 'race-dot ai' }), db = mk('circle', { r: 6, class: 'race-dot you' });
+    // red flashes for crash years of your rotation
+    var marks = mk('g', { class: 'race-marks' });
+    function draw(k) {
+      var i = Math.floor(k), f = k - i, dA = '', dB = '';
+      for (var j = 0; j <= i && j < n; j++) { dA += (j ? 'L' : 'M') + X(j).toFixed(1) + ',' + Y(cumA[j]).toFixed(1); dB += (j ? 'L' : 'M') + X(j).toFixed(1) + ',' + Y(cumB[j]).toFixed(1); }
+      var vA = cumA[Math.min(i, n - 1)], vB = cumB[Math.min(i, n - 1)], xP = X(Math.min(i, n - 1));
+      if (i < n - 1 && f > 0) { vA = cumA[i] + (cumA[i + 1] - cumA[i]) * f; vB = cumB[i] + (cumB[i + 1] - cumB[i]) * f; xP = X(i) + (X(i + 1) - X(i)) * f; dA += 'L' + xP.toFixed(1) + ',' + Y(vA).toFixed(1); dB += 'L' + xP.toFixed(1) + ',' + Y(vB).toFixed(1); }
+      pa.setAttribute('d', dA); pb.setAttribute('d', dB);
+      da.setAttribute('cx', xP); da.setAttribute('cy', Y(vA)); db.setAttribute('cx', xP); db.setAttribute('cy', Y(vB));
+      $('race-ai').textContent = money(vA); $('race-you').textContent = money(vB);
+      $('race-year').textContent = a[Math.min(i, n - 1)].year;
+    }
+    function finish() {
+      var d = cumA[n - 1] - cumB[n - 1];
+      $('race-end').textContent = d > 0 ? t('raceEnd', { n: n, d: money(d), a: money(cumA[n - 1]), b: money(cumB[n - 1]) }) : t('raceEndYou', { n: n, a: money(cumA[n - 1]), b: money(cumB[n - 1]) });
+      $('race-play').textContent = t('raceAgain');
+    }
+    var anim = null;
+    function play() {
+      if (anim) cancelAnimationFrame(anim);
+      while (marks.firstChild) marks.removeChild(marks.firstChild);
+      $('race-end').textContent = '';
+      if (FX.reduce) { draw(n - 1); finish(); return; }
+      var t0 = null, dur = 7000, flashed = {};
+      function step(ts) {
+        if (t0 === null) t0 = ts;
+        var k = Math.min(1, (ts - t0) / dur) * (n - 1);
+        draw(k);
+        var i = Math.floor(k);
+        if (b[i] && b[i].rev < 0.5 * b[i].cost && !flashed[i]) {
+          flashed[i] = 1;
+          var c = document.createElementNS(NS, 'circle'); c.setAttribute('cx', X(i)); c.setAttribute('cy', Y(cumB[i])); c.setAttribute('r', 5); c.setAttribute('class', 'race-crash');
+          marks.appendChild(c);
+        }
+        if (k < n - 1) anim = requestAnimationFrame(step); else finish();
+      }
+      anim = requestAnimationFrame(step);
+    }
+    $('race-play').onclick = play;
+    draw(0);
+    // auto-play the first time the race scrolls into view
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (es) { if (es[0].isIntersecting) { io.disconnect(); setTimeout(play, 300); } }, { threshold: 0.4 });
+      io.observe(box);
+    } else { draw(n - 1); finish(); }
+  }
+
+  /* ---------- 10-year futures (bootstrap of real years) ---------- */
+  function futures(r, N, horizon, seed) {
+    var ys = farmYears(r).map(function (x) { return x.m; });
+    var s = seed || 12345;
+    function rnd() { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; }
+    var out = new Float64Array(N);
+    for (var i = 0; i < N; i++) { var sum = 0; for (var k = 0; k < horizon; k++) sum += ys[Math.floor(rnd() * ys.length)]; out[i] = sum; }
+    var sorted = Array.prototype.slice.call(out).sort(function (a, b) { return a - b; });
+    return { all: sorted, pNeg: sorted.filter(function (v) { return v < 0; }).length / N, median: sorted[Math.floor(N / 2)], q10: sorted[Math.floor(N * 0.1)] };
+  }
+  function renderMC(R) {
+    var N = 5000, H = 10;
+    var u = futures(R.user, N, H, 7), u5 = futures(R.y50.user, N, H, 7), b = futures(R.best, N, H, 7), b5 = futures(R.y50.best, N, H, 7);
+    var html = '<h3>' + esc(t('mcTitle')) + '</h3><p class="small muted">' + esc(t('mcLead')) + '</p>' +
+      '<div class="mc-gauges">' + gauge(t('mcYours') + ' · ' + t('mcNow'), u.pNeg) + gauge(t('mcYours') + ' · ' + t('mc50'), u5.pNeg, 'hot') +
+      gauge(t('mcBest') + ' · ' + t('mcNow'), b.pNeg, 'best') + gauge(t('mcBest') + ' · ' + t('mc50'), b5.pNeg, 'best hot') + '</div>' +
+      '<div id="mc-hist"></div>' +
+      '<p class="note-strong">' + esc(t('mcLine', { p: pct(u.pNeg), p50: pct(u5.pNeg), b: pct(b.pNeg), b50: pct(b5.pNeg) })) + '</p>' +
+      '<p class="small">' + esc(t('mcMedian', { m: money(u.median), q: money(u.q10) })) + '</p>';
+    $('mc').innerHTML = html;
+    // histogram of 10-year outcomes: yours vs best
+    var lo = Math.min(u.all[0], b.all[0]), hi = Math.max(u.all[N - 1], b.all[N - 1]), bins = 24, w = (hi - lo) / bins || 1;
+    function hist(arr) { var h = new Array(bins).fill(0); arr.forEach(function (v) { h[Math.min(bins - 1, Math.floor((v - lo) / w))]++; }); return h; }
+    var hu = hist(u.all), hb = hist(b.all), xs = [];
+    for (var i = 0; i < bins; i++) xs.push(Math.round(lo + (i + 0.5) * w));
+    Charts.chart($('mc-hist'), { x: xs, height: 190, series: [
+      { type: 'bar', name: t('mcYours'), values: hu, color: function (v, i) { return xs[i] < 0 ? '#b73a2b' : '#2e5e8c'; }, legendColor: '#2e5e8c', title: function (i) { return xs[i] + ' $/ha: ' + hu[i]; } },
+      { type: 'line', name: t('mcBest'), values: hb, color: '#3f7d4e', dots: false }
+    ] });
+  }
+  function gauge(label, p, cls) {
+    return '<div class="mcg ' + (cls || '') + '"><div class="ring" style="--p:' + Math.round(p * 100) + '"><b data-count="' + Math.round(p * 100) + '" data-suffix="%">0%</b></div><span>' + esc(label) + '</span></div>';
+  }
+
+  /* ---------- Regions of Kazakhstan ---------- */
+  var regionMap = null;
+  function renderRegions(R) {
+    var box = $('regions');
+    box.innerHTML = '<h3>' + esc(t('regTitle')) + '</h3><p class="small muted">' + esc(t('regLead')) + '</p>' +
+      '<button type="button" class="btn primary" id="reg-run">' + esc(t('regRun')) + '</button><div id="reg-out"></div>';
+    $('reg-run').onclick = function () { runRegions(R); };
+    if (state.regions && state.regions.R === R) drawRegions(R, state.regions.rows);
+  }
+  function runRegions(R) {
+    var list = (window.PRESETS || []);
+    $('reg-out').innerHTML = '<p class="muted">' + esc(t('regLoading')) + '</p><i class="skel"></i><i class="skel" style="width:70%"></i>';
+    Promise.all(list.map(function (p) { return getPreset(p.id); })).then(function (all) {
+      var rows = all.map(function (P, i) {
+        var W = M.prepareWeather(P.weather, P.lat);
+        var r = M.crashTest(W, P.soil || DEFAULT_SOIL, R.plan, Object.assign({}, R.opts));
+        return { p: list[i], loss: lossYears(r), n: nYearsOf(r), crash: r.crashRate, m: r.meanMargin };
+      }).sort(function (a, b) { return a.loss / a.n - b.loss / b.n; });
+      state.regions = { R: R, rows: rows };
+      if (state.last === R) drawRegions(R, rows);
+    }).catch(function (e) { $('reg-out').textContent = e.message; });
+  }
+  function drawRegions(R, rows) {
+    var name = function (p) { return p.name[I18N.lang] || p.name.en; };
+    var html = '<div id="reg-map" class="reg-map"></div><div class="reg-list">';
+    rows.forEach(function (r, i) {
+      var share = r.loss / r.n, col = share < 0.2 ? 'var(--ok)' : (share < 0.4 ? 'var(--dent)' : 'var(--crash)');
+      html += '<div class="reg-row" style="animation-delay:' + (i * 70) + 'ms"><span class="reg-dot" style="background:' + col + '"></span><span class="reg-name">' + esc(name(r.p)) + '</span>' +
+        '<i><s style="width:' + Math.round(share * 100) + '%;background:' + col + '"></s></i><b>' + r.loss + '/' + r.n + '</b><em>' + money(r.m) + ' $</em></div>';
+    });
+    var kzRows = rows.filter(function (r) { return r.p.lon > 40 && r.p.lon < 90 && r.p.lat > 38; });
+    if (kzRows.length > 1) html += '</div><p class="note-strong">' + esc(t('regBest', { a: name(kzRows[0].p), b: name(kzRows[kzRows.length - 1].p) })) + '</p>';
+    else html += '</div>';
+    $('reg-out').innerHTML = html;
+    $('reg-run').hidden = true;
+    if (typeof L === 'undefined') { $('reg-map').style.display = 'none'; return; }
+    if (regionMap) { regionMap.remove(); regionMap = null; }
+    regionMap = L.map('reg-map', { scrollWheelZoom: false, zoomControl: false, attributionControl: true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 10, attribution: '&copy; OpenStreetMap' }).addTo(regionMap);
+    var pts = [];
+    rows.forEach(function (r) {
+      var share = r.loss / r.n, col = share < 0.2 ? '#3f7d4e' : (share < 0.4 ? '#dca72a' : '#b73a2b');
+      L.circleMarker([r.p.lat, r.p.lon], { radius: 9 + share * 16, color: '#13283b', weight: 2, fillColor: col, fillOpacity: 0.9 })
+        .bindTooltip(name(r.p) + ': ' + r.loss + '/' + r.n).addTo(regionMap);
+      pts.push([r.p.lat, r.p.lon]);
+    });
+    var kz = pts.filter(function (p) { return p[1] > 40; });
+    regionMap.fitBounds(kz.length ? kz : pts, { padding: [30, 30] });
   }
 
   /* ---------------------------------------------------------------- CSV: one reproducible calculation */

@@ -40,6 +40,10 @@ Car makers crash-test a car before anyone drives it. We do the same for a farmer
    - **wind erosion and the Virgin Lands**: windy spring days from NASA POWER WS2M;
    - a **game**: beat the AI optimiser in five tries;
    - a **voice summary** (browser speech) and a printable **field risk passport** for a bank or insurer;
+   - a **money race**: animated cumulative income of your rotation against the AI's best rotation over 44 real years;
+   - the **chance of losing money over the next 10 years** from 5,000 bootstrapped futures (real climate and Climate 2050);
+   - **where in Kazakhstan your rotation works**: the same plan crash-tested on every example farm, on a map;
+   - a **living field** on the home screen: a wheat field that replays every real year of NASA weather;
    - the interface in **English, Russian and Kazakh** (the Kazakh text was machine-assisted and should be checked by a native speaker);
    - a **link** that reopens the same test (location, rotation, priorities) on another computer;
    - a printable report and a downloadable season-by-season calculation (CSV with weather, water need and use, yield and profit, plus all inputs).

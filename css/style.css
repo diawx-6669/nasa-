@@ -662,3 +662,41 @@ tr.me:hover td { background: #f7ecd4; }
 @media (max-width: 860px) { .hero { min-height: auto; } .hero .field { height: 45%; } }
 @media (prefers-reduced-motion: reduce) { .intro { display: none; } }
 .hero-data { position: relative; z-index: 1; display: table; margin-left: auto; margin-right: auto; background: rgba(19,40,59,.75); backdrop-filter: blur(6px); padding: 6px 14px; border-radius: 999px; color: #c9d4de; }
+
+/* ---------- round 4: race, futures, regions ---------- */
+.race { background: linear-gradient(180deg, var(--night) 0%, #17324a 100%); color: #eef3f7; box-shadow: var(--shadow); }
+.race h3 { color: #fff; } .race .muted { color: #9fb2c3; } .race .note-strong { color: #f3d79b; }
+.race-head { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+.race-board { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 12px; margin: 14px 0 6px; }
+.race-tag { display: grid; gap: 2px; } .race-tag.ai { text-align: right; }
+.race-tag span { font-size: .85rem; color: #9fb2c3; }
+.race-tag b { font-family: var(--display); font-stretch: 120%; font-size: clamp(1.6rem, 4vw, 2.6rem); font-weight: 800; font-variant-numeric: tabular-nums; }
+.race-tag.you b { color: #f1c453; } .race-tag.ai b { color: #7fcf8f; }
+.race-year { font-family: var(--display); font-stretch: 125%; font-size: 1.4rem; font-weight: 800; color: #fff; padding: 4px 14px; border: 1px solid rgba(255,255,255,.2); border-radius: 999px; font-variant-numeric: tabular-nums; }
+.race-svg { width: 100%; height: 260px; display: block; overflow: visible; }
+.race-svg .race-zero { stroke: rgba(255,255,255,.25); stroke-dasharray: 4 4; }
+.race-svg path { fill: none; stroke-width: 3.5; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.race-svg .race-you { stroke: #f1c453; filter: drop-shadow(0 0 6px rgba(241,196,83,.6)); }
+.race-svg .race-ai { stroke: #7fcf8f; filter: drop-shadow(0 0 6px rgba(127,207,143,.6)); }
+.race-dot { stroke: #fff; stroke-width: 2; vector-effect: non-scaling-stroke; } .race-dot.you { fill: #f1c453; } .race-dot.ai { fill: #7fcf8f; }
+.race-crash { fill: #ff6b55; stroke: #fff; stroke-width: 1.5; vector-effect: non-scaling-stroke; transform-box: fill-box; transform-origin: center; animation: boom .6s var(--ease-spring) both; }
+@keyframes boom { 0% { transform: scale(3); opacity: 0; } 60% { opacity: 1; } 100% { transform: scale(1); } }
+@media (max-width: 600px) { .race-svg { height: 200px; } }
+
+.mc-gauges { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin: 12px 0; }
+@media (max-width: 1100px) { .mc-gauges { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.mcg { display: grid; justify-items: center; gap: 6px; text-align: center; font-size: .8rem; color: var(--muted); }
+.ring { --c: var(--data); width: 84px; height: 84px; border-radius: 50%; display: grid; place-items: center; position: relative;
+  background: conic-gradient(var(--c) calc(var(--p) * 1%), #e6eae5 0); animation: spinIn 1.1s var(--ease-out) both; }
+.ring::before { content: ""; position: absolute; inset: 9px; border-radius: 50%; background: #fff; }
+.ring b { position: relative; font-family: var(--display); font-size: 1.25rem; font-weight: 800; color: var(--ink); }
+.mcg.hot .ring { --c: var(--crash); } .mcg.best .ring { --c: var(--ok); } .mcg.best.hot .ring { --c: #c96a2e; }
+
+.reg-map { height: 260px; border-radius: var(--r-sm); margin: 12px 0; border: 1px solid var(--line); z-index: 1; }
+.reg-list { display: grid; gap: 6px; }
+.reg-row { display: grid; grid-template-columns: 12px minmax(0, 1.4fr) minmax(0, 1fr) 3.4em 4.4em; gap: 8px; align-items: center; font-size: .86rem; animation: slideIn .5s var(--ease-out) both; }
+.reg-dot { width: 12px; height: 12px; border-radius: 50%; }
+.reg-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.reg-row i { display: block; height: 8px; border-radius: 999px; background: #eef1ec; overflow: hidden; }
+.reg-row i s { display: block; height: 100%; border-radius: 999px; animation: fillw 1s var(--ease-out) .2s both; }
+.reg-row b, .reg-row em { text-align: right; font-style: normal; }
