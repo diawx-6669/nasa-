@@ -132,11 +132,14 @@
   <section id="results" class="report" hidden>
     <nav class="subnav" id="subnav" aria-label="Report sections">
       <a href="#verdict" data-i18n="snSummary"></a>
+      <a href="#y2050" data-i18n="snY50"></a>
       <a href="#outlook" data-i18n="snNext"></a>
       <a href="#p-map" data-i18n="snMap"></a>
       <a href="#p-alts" data-i18n="snAlts"></a>
       <a href="#sowing" data-i18n="snSow"></a>
       <a href="#risk" data-i18n="snRisk"></a>
+      <a href="#streak" data-i18n="snStreak"></a>
+      <a href="#game" data-i18n="snGame"></a>
       <a href="#p-charts" data-i18n="snCharts"></a>
     </nav>
     <div class="verdict reveal" id="verdict"></div>
@@ -146,6 +149,8 @@
       <ul id="findings" class="findings"></ul>
       <div id="worst-years" class="worst"></div>
     </div>
+
+    <div class="panel reveal y50" id="y2050"></div>
 
     <div class="panel reveal outlook" id="outlook"></div>
 
@@ -194,6 +199,20 @@
     </div>
 
 
+    <div class="cols">
+      <div class="panel reveal" id="shi"></div>
+      <div class="panel reveal" id="insure"></div>
+    </div>
+
+    <div class="panel reveal" id="streak"></div>
+
+    <div class="cols">
+      <div class="panel reveal" id="waterkg"></div>
+      <div class="panel reveal" id="wind"></div>
+    </div>
+
+    <div class="panel reveal game" id="game"></div>
+
     <div class="panel reveal">
       <h3 data-i18n="scTitle"></h3>
       <div class="table-wrap"><table id="sctable"></table></div>
@@ -210,6 +229,7 @@
       <button type="button" class="btn ghost" id="btn-csv" data-i18n="csv"></button>
       <button type="button" class="btn ghost" id="btn-print" data-i18n="print"></button>
       <button type="button" class="btn ghost" id="btn-share" data-i18n="share"></button>
+      <button type="button" class="btn primary" id="btn-passport" data-i18n="ppBtn"></button>
     </div>
   </section>
 

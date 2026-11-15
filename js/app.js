@@ -5,7 +5,7 @@
   var $ = function (id) { return document.getElementById(id); };
 
   var POWER_PARAMS = ['T2M_MAX', 'T2M_MIN', 'PRECTOTCORR', 'ALLSKY_SFC_SW_DWN', 'RH2M', 'WS2M', 'GWETROOT'];
-  var SCEN = { hist: { dT: 0, pFactor: 1 }, warm: { dT: 1.5, pFactor: 1 }, hot: { dT: 2.5, pFactor: 0.9 } };
+  var SCEN = { hist: { dT: 0, pFactor: 1 }, warm: { dT: 1.5, pFactor: 1 }, hot: { dT: 2.5, pFactor: 0.9 }, y2050: { dT: 2, pFactor: 0.9 } };
   var DEFAULT_SOIL = { clay: 25, sand: 40, socGkg: 20, bd: 1.3 };
   var DEFAULT_PLAN = ['fallow', 'wheat', 'wheat', 'barley'];
   var PRICE_LEVELS = [-20, -15, -10, -5, 0, 5, 10, 15, 20];
@@ -417,16 +417,18 @@
       });
       var prices = priceSweep(results, w, opts.irrigation, user, fix);
       var sowing = sowingAdvisor(W, soil, plan, opts);
+      var W50 = getW('y2050');
+      var y50 = { W: W50, user: M.crashTest(W50, soil, plan, Object.assign({}, opts)), best: M.crashTest(W50, soil, best.plan, Object.assign({}, opts)) };
       var water = waterCurve(W, soil, plan, opts);
       state.last = {
         W: W, sc: sc, plan: plan, user: user, best: best, rank: results.indexOf(user) + 1, total: results.length, fix: fix,
         top: results.slice(0, 8), all: results, valid: M.validateWetness(Wh, validRun.dailyWet), clim: M.climateFingerprint(Wh),
         scen: scen, opts: opts, soil: Object.assign({}, soil), prices: prices, w: w,
-        sowing: sowing, water: water, raw: state.raw, lat: state.lat, lon: state.lon
+        sowing: sowing, water: water, raw: state.raw, lat: state.lat, lon: state.lon, y50: y50, norm: results.norm
       };
       state.compare = null;
       updateHash();
-      state.why = null; state.priceLevel = 0;
+      state.why = null; state.priceLevel = 0; state.mapMode = 'real'; state.game = null;
       renderResults(state.last);
       $('results').hidden = false; $('nav-report').hidden = false;
       FX.observe($('results')); FX.refresh($('results'));
@@ -459,6 +461,7 @@
     renderVerdict(R); renderFindings(R); renderCrashMap(R); renderWhy(R); renderFix(R); renderPerCrop(R);
     renderAlts(R); renderRisk(R); renderPrice(R); renderScenario(R); renderCharts(R);
     renderSowing(R); renderWater(R); renderFarm(R); renderCompare(R); renderOutlook(R);
+    renderY50(R); renderSHI(R); renderInsurance(R); renderStreak(R); renderWaterKg(R); renderWind(R); renderGame(R); renderVoiceBtn(R);
     if (window.FX) { FX.observe($('results')); FX.refresh($('results')); }
   }
 
@@ -520,7 +523,8 @@
   var OUT_COL = { ok: 'var(--ok)', dent: 'var(--dent)', crash: 'var(--crash)', rest: 'var(--rest)' };
 
   function renderCrashMap(R) {
-    var u = R.user, box = $('crashmap'); box.innerHTML = '';
+    var u = mapCtx(R).user, box = $('crashmap'); box.innerHTML = '';
+    if (state.mapMode === '2050') box.insertAdjacentHTML('beforeend', '<p class="map-note">' + esc(t('y50MapNote')) + '</p>');
     var years = []; for (var y = u.Y0; y <= u.Y1; y++) years.push(y);
     var grid = document.createElement('div'); grid.className = 'cm-grid';
     grid.style.gridTemplateColumns = 'minmax(120px, 170px) repeat(' + years.length + ', minmax(12px, 1fr))';
@@ -558,7 +562,7 @@
   /* ---------- "why did this year fail?" ---------- */
   function phaseOf(R, season) {
     var ph = 0;
-    R.user.runs.forEach(function (run) { if (run.seasons.indexOf(season) >= 0) ph = run.phase; });
+    mapCtx(R).user.runs.forEach(function (run) { if (run.seasons.indexOf(season) >= 0) ph = run.phase; });
     return ph;
   }
   function openWhy(season, scroll) {
@@ -574,7 +578,7 @@
     var s0 = state.why;
     if (!s0) { box.innerHTML = '<h3>' + esc(t('whyHead')) + '</h3><p class="why-empty">' + esc(t('whyPick')) + '</p>'; return; }
     if (s0._cell) s0._cell.classList.add('sel');
-    var W = R.W, c = DB.BY_ID[s0.crop];
+    var W = mapCtx(R).W, c = DB.BY_ID[s0.crop];
     // re-run this starting position with a daily trace for the chosen year
     var run = M.simulate(W, R.soil, R.plan, Object.assign({}, R.opts, { phase: phaseOf(R, s0), traceYear: s0.year }));
     var s = run.seasons.filter(function (x) { return x.year === s0.year && x.pos === s0.pos; })[0] || s0;
@@ -1067,6 +1071,268 @@
     }
   }
 
+
+  /* ================================================================ round 3 features */
+  function mapCtx(R) { return state.mapMode === '2050' && R.y50 ? { W: R.y50.W, user: R.y50.user } : { W: R.W, user: R.user }; }
+  function lossYears(r) { return r.early.lossYears + r.late.lossYears; }
+  function nYearsOf(r) { return r.early.years + r.late.years; }
+  function farmYears(r) {
+    var per = {};
+    r.runs.forEach(function (run) { run.seasons.forEach(function (x) { (per[x.year] = per[x.year] || []).push(x); }); });
+    return Object.keys(per).sort().map(function (y) {
+      var ss = per[y];
+      return { year: +y, m: mean(ss.map(function (x) { return x.margin; })), rev: mean(ss.map(function (x) { return x.revenue; })), cost: mean(ss.map(function (x) { return x.cost; })) };
+    });
+  }
+
+  /* ---------- Climate 2050 ---------- */
+  function renderY50(R) {
+    var u = R.user, f = R.y50.user, n = nYearsOf(u), a = lossYears(u), b = lossYears(f);
+    var html = '<div class="y50-grid"><div><h3>' + esc(t('y50Title')) + '</h3><p class="muted">' + esc(t('y50Lead')) + '</p>' +
+      '<p class="y50-line">' + esc(t('y50Line', { a: a, b: b, n: n })) + '</p>' +
+      '<p>' + esc(t('y50Crash', { a: pct(u.crashRate), b: pct(f.crashRate) })) + ' ' + esc(t('y50Best', { a: lossYears(R.best), b: lossYears(R.y50.best) })) + '</p>' +
+      '<button type="button" class="btn ' + (state.mapMode === '2050' ? 'ghost' : 'primary') + '" id="y50-btn">' + esc(state.mapMode === '2050' ? t('y50BtnBack') : t('y50Btn')) + '</button>' +
+      '<p class="small muted y50-note">' + esc(t('y50Note')) + '</p></div>' +
+      '<div class="y50-dials"><div class="dial"><span>' + esc(t('y50Now')) + '</span><b data-count="' + a + '">0</b><em>' + esc(t('y50Years')) + ' / ' + n + '</em><i><s style="width:' + Math.round(a / n * 100) + '%"></s></i></div>' +
+      '<div class="dial hot"><span>' + esc(t('y50Then')) + '</span><b data-count="' + b + '">0</b><em>' + esc(t('y50Years')) + ' / ' + n + '</em><i><s style="width:' + Math.round(b / n * 100) + '%"></s></i></div></div></div>';
+    $('y2050').innerHTML = html;
+    $('y50-btn').onclick = function () {
+      state.mapMode = state.mapMode === '2050' ? 'real' : '2050';
+      state.why = null;
+      renderCrashMap(R); renderWhy(R); renderY50(R); FX.refresh($('y2050'));
+      $('p-map').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+  }
+
+  /* ---------- Soil health index ---------- */
+  function renderSHI(R) {
+    var h = M.soilHealthIndex(R.user), hb = M.soilHealthIndex(R.best), parts = t('shiParts');
+    var col = h.value >= 60 ? 'var(--ok)' : (h.value >= 40 ? 'var(--dent)' : 'var(--crash)');
+    var html = '<h3>' + esc(t('shiTitle')) + '</h3><div class="shi-top"><div class="gauge" style="--v:' + h.value + ';--c:' + col + '"><b data-count="' + h.value + '">0</b><span>/ 100</span></div>' +
+      '<div class="shi-parts">';
+    Object.keys(h.parts).forEach(function (k) {
+      var v = h.parts[k]; if (Math.abs(v) < 0.5 && (k === 'monoculture' || k === 'fallow')) return;
+      html += '<div class="sp"><span>' + esc(parts[k] || k) + '</span><i class="' + (v >= 0 ? 'up' : 'down') + '"><s style="width:' + Math.min(100, Math.abs(v) / 25 * 100) + '%"></s></i><b>' + (v > 0 ? '+' : '') + Math.round(v) + '</b></div>';
+    });
+    html += '</div></div><p class="small">' + esc(t('bestPlan')) + ': <b>' + hb.value + '</b> / 100</p><p class="small muted">' + esc(t('shiHint')) + '</p>';
+    $('shi').innerHTML = html;
+  }
+
+  /* ---------- Insurance ---------- */
+  function premium(r) {
+    var ss = [];
+    r.runs.forEach(function (run) { run.seasons.forEach(function (x) { if (DB.BY_ID[x.crop].harvestable) ss.push(x); }); });
+    var losses = ss.map(function (x) { return Math.max(0, -x.margin); });
+    var lossy = ss.filter(function (x) { return x.margin < 0; });
+    return { p: ss.length ? lossy.length / ss.length : 0, el: mean(losses), cond: lossy.length ? mean(lossy.map(function (x) { return -x.margin; })) : 0 };
+  }
+  function renderInsurance(R) {
+    var box = $('insure');
+    var rate = state.kzt || 500, load = state.insLoad === undefined ? 20 : state.insLoad;
+    box.innerHTML = '<h3>' + esc(t('insTitle')) + '</h3><div class="row"><label class="field"><span>' + esc(t('insRate')) + '</span><input type="number" id="ins-rate" min="1" step="5" value="' + rate + '"></label>' +
+      '<label class="field"><span>' + esc(t('insLoad')) + '</span><input type="number" id="ins-load" min="0" max="100" step="5" value="' + load + '"></label></div><div id="ins-out"></div><p class="small muted">' + esc(t('insNote')) + '</p>';
+    function upd() {
+      state.kzt = Math.max(1, +$('ins-rate').value || 500); state.insLoad = Math.max(0, +$('ins-load').value || 0);
+      var u = premium(R.user), b = premium(R.best), k = state.kzt, g = 1 + state.insLoad / 100;
+      $('ins-out').innerHTML = '<p class="ins-big"><b>' + money(u.el * k) + ' ₸</b><span>/ ' + (I18N.lang === 'en' ? 'ha' : 'га') + '</span></p>' +
+        '<p>' + esc(t('insLine', { p: pct(u.p), l: money(u.cond * k) })) + '</p><p>' + esc(t('insFair', { f: money(u.el * k), fu: money(u.el), g: money(u.el * k * g) })) + '</p>' +
+        (R.best !== R.user ? '<p>' + esc(t('insBest', { b: money(b.el * k) })) + '</p>' : '');
+    }
+    $('ins-rate').oninput = upd; $('ins-load').oninput = upd; upd();
+  }
+
+  /* ---------- Worst case in a row ---------- */
+  function renderStreak(R) {
+    var box = $('streak'), fy = farmYears(R.user);
+    var worst = fy.reduce(function (a, b) { return b.m < a.m ? b : a; });
+    var y0 = R.user.Y0, y1 = R.user.Y1;
+    var st = state.streak && state.streak.R === R ? state.streak : { R: R, d: worst.year, from: Math.min(worst.year, y1 - 2), k: 3 };
+    state.streak = st;
+    var opts = function (a, b, sel) { var h = ''; for (var y = a; y <= b; y++) h += '<option' + (y === sel ? ' selected' : '') + '>' + y + '</option>'; return h; };
+    box.innerHTML = '<h3>' + esc(t('stkTitle')) + '</h3><p class="muted">' + esc(t('stkLead')) + '</p>' +
+      '<div class="stk-ctl"><label class="inline"><span>' + esc(t('stkYear')) + '</span><select id="stk-d">' + opts(y0, y1, st.d) + '</select></label>' +
+      '<label class="inline"><span>' + esc(t('stkFrom')) + '</span><select id="stk-from">' + opts(y0, y1 - 1, st.from) + '</select></label>' +
+      '<label class="inline"><select id="stk-k"><option' + (st.k === 2 ? ' selected' : '') + '>2</option><option' + (st.k === 3 ? ' selected' : '') + '>3</option><option' + (st.k === 4 ? ' selected' : '') + '>4</option></select><span>' + esc(t('stkTimes')) + '</span></label>' +
+      '<button type="button" class="btn primary" id="stk-run">' + esc(t('stkRun')) + '</button></div><div id="stk-out"></div>';
+    ['stk-d', 'stk-from', 'stk-k'].forEach(function (id) { $(id).style.width = 'auto'; });
+    $('stk-run').onclick = function () { st.d = +$('stk-d').value; st.from = +$('stk-from').value; st.k = +$('stk-k').value; drawStreak(R, st); };
+    drawStreak(R, st);
+  }
+  function drawStreak(R, st) {
+    var k = Math.min(st.k, R.user.Y1 - st.from + 1);
+    var W2 = M.repeatYear(R.W, st.d, st.from, k);
+    var u2 = farmYears(M.crashTest(W2, R.soil, R.plan, Object.assign({}, R.opts)));
+    var b2 = farmYears(M.crashTest(W2, R.soil, R.best.plan, Object.assign({}, R.opts)));
+    var u1 = farmYears(R.user);
+    function pick(arr) { return arr.filter(function (x) { return x.year >= st.from && x.year < st.from + k; }); }
+    var a1 = pick(u1), a2 = pick(u2), a3 = pick(b2);
+    var sum = function (arr) { return arr.reduce(function (s, x) { return s + x.m; }, 0); };
+    var html = '<p class="note-strong">' + esc(t('stkLine', { d: st.d, k: k, a: st.from, b: st.from + k - 1, u: money(sum(a2)), r: money(sum(a1)), x: money(sum(a3)) })) + '</p>';
+    html += '<div class="stk-bars">';
+    var mx = Math.max.apply(null, a1.concat(a2, a3).map(function (x) { return Math.abs(x.m); })) || 1;
+    a1.forEach(function (x, i) {
+      html += '<div class="stk-year"><b>' + x.year + '</b>';
+      [[x.m, 'real', t('stkCols')[1]], [a2[i] ? a2[i].m : 0, 'rep', t('stkCols')[2]], [a3[i] ? a3[i].m : 0, 'best', t('stkCols')[3]]].forEach(function (v) {
+        html += '<div class="sb ' + v[1] + (v[0] < 0 ? ' neg' : '') + '"><span>' + esc(v[2]) + '</span><i><s style="width:' + (Math.abs(v[0]) / mx * 100).toFixed(1) + '%"></s></i><em>' + money(v[0]) + ' $</em></div>';
+      });
+      html += '</div>';
+    });
+    $('stk-out').innerHTML = html + '</div>';
+  }
+
+  /* ---------- Water per kilogram ---------- */
+  function renderWaterKg(R) {
+    var rows = [];
+    var cands = uniq(R.plan.concat(state.cands)).filter(function (id) { return DB.BY_ID[id].harvestable; });
+    cands.forEach(function (id) {
+      var src = null;
+      R.user.byPos.forEach(function (b) { if (b.crop === id) src = (src || []).concat(b.seasons); });
+      if (!src) { var r = M.crashTest(R.W, R.soil, [id, 'wheat'].filter(function (x, i, a) { return a.indexOf(x) === i; }), Object.assign({}, R.opts)); src = r.byPos[0].seasons; }
+      var good = src.filter(function (x) { return x.yield > 0.05; });
+      var eta = mean(good.map(function (x) { return x.eta + (x.irrD || 0) * 0; })), y = mean(good.map(function (x) { return x.yield; }));
+      if (y > 0) rows.push({ id: id, l: eta * 10000 / (y * 1000), eta: eta, y: y });
+    });
+    rows.sort(function (a, b) { return a.l - b.l; });
+    var mx = rows.length ? rows[rows.length - 1].l : 1;
+    var html = '<h3>' + esc(t('wfTitle')) + '</h3><p class="small muted">' + esc(t('wfLead')) + '</p><div class="wf">';
+    rows.forEach(function (r) {
+      html += '<div class="wf-row"><span class="rot">' + cropHTML(r.id) + '</span><i><s style="width:' + (r.l / mx * 100).toFixed(1) + '%"></s></i><b>' + money(r.l) + ' L</b></div>';
+    });
+    html += '</div>';
+    if (rows.length > 1) html += '<p class="note-strong">' + esc(t('wfLine', { a: cropName(rows[0].id).toLowerCase(), x: money(rows[0].l), b: cropName(rows[rows.length - 1].id).toLowerCase(), y: money(rows[rows.length - 1].l) })) + '</p>';
+    $('waterkg').innerHTML = html;
+  }
+
+  /* ---------- Wind erosion & Virgin Lands ---------- */
+  function renderWind(R) {
+    var W = R.W, years = [], vals = [];
+    var from = W.lat >= 0 ? 91 : 274;
+    for (var y = W.firstYear; y <= W.lastYear; y++) {
+      var s0 = M.dayIndex(W, y, from); if (s0 < 0) continue;
+      var c = 0; for (var k = s0; k < s0 + 91 && k < W.n; k++) if (W.ws[k] >= 6) c++;
+      years.push(y); vals.push(c);
+    }
+    var html = '<h3>' + esc(t('wndTitle')) + '</h3><p class="small">' + esc(t('wndLead')) + '</p>' +
+      '<p class="note-strong">' + esc(t('wndLine', { w: mean(vals).toFixed(0), u: R.user.erosionDays.toFixed(1), b: R.best.erosionDays.toFixed(1) })) + '</p>' +
+      '<p class="small muted">' + esc(t('wndChart')) + '</p><div id="wnd-chart"></div>';
+    $('wind').innerHTML = html;
+    Charts.chart($('wnd-chart'), { x: years, height: 200, legend: false, series: [{ type: 'bar', name: 'days', values: vals, color: '#8a6d3b' }] });
+  }
+
+  /* ---------- Game: beat the AI ---------- */
+  function renderGame(R) {
+    var g = state.game && state.game.R === R ? state.game : { R: R, left: 5, best: null, plan: ['wheat', 'pea'], tries: [] };
+    state.game = g;
+    var ai = R.all[0];
+    var html = '<div class="gm-head"><h3>' + esc(t('gmTitle')) + '</h3><span class="gm-left">' + esc(t('gmLeft', { n: g.left })) + '</span></div><p class="muted">' + esc(t('gmLead')) + '</p>';
+    html += '<div class="gm-slots">';
+    for (var i = 0; i < 4; i++) {
+      html += '<select data-i="' + i + '"><option value="">—</option>' + DB.CROPS.map(function (c) { return '<option value="' + c.id + '"' + (g.plan[i] === c.id ? ' selected' : '') + '>' + esc(cropName(c.id)) + '</option>'; }).join('') + '</select>';
+    }
+    html += '<button type="button" class="btn primary" id="gm-try"' + (g.left ? '' : ' disabled') + '>' + esc(t('gmTry')) + '</button></div>';
+    html += '<div class="gm-board"><div class="gm-ai"><span>AI</span><div class="rot">' + rotHTML(ai.plan) + '</div><b>' + Math.round(ai.score) + '</b></div>';
+    g.tries.forEach(function (tr) {
+      html += '<div class="gm-try ' + (tr.score > ai.score ? 'win' : '') + '"><span>' + esc(I18N.lang === 'en' ? 'You' : 'Вы') + '</span><div class="rot">' + rotHTML(tr.plan) + '</div><b>' + Math.round(tr.score) + '</b></div>';
+    });
+    html += '</div><p class="gm-msg" id="gm-msg">' + (g.msg ? esc(g.msg) : '') + '</p>';
+    if (!g.left) html += '<button type="button" class="link" id="gm-again">' + esc(t('gmAgain')) + '</button>';
+    $('game').innerHTML = html;
+    $('game').querySelectorAll('.gm-slots select').forEach(function (sel) { sel.onchange = function () { g.plan[+sel.getAttribute('data-i')] = sel.value; }; });
+    if ($('gm-again')) $('gm-again').onclick = function () { state.game = null; renderGame(R); };
+    $('gm-try').onclick = function () {
+      var plan = g.plan.filter(Boolean).slice(0, 4);
+      if (!plan.length || !g.left) return;
+      var r = M.crashTest(R.W, R.soil, plan, Object.assign({}, R.opts));
+      M.scoreOne(r, R.norm);
+      g.left--; g.tries.unshift({ plan: plan, score: r.score });
+      var bestTry = g.tries.reduce(function (a, b) { return b.score > a.score ? b : a; });
+      var s = Math.round(bestTry.score), a = Math.round(ai.score);
+      if (bestTry.score > ai.score) { g.msg = t('gmWin', { s: s, a: a }); confetti($('game')); }
+      else if (ai.score - bestTry.score < 3) g.msg = t('gmClose', { s: s, a: a });
+      else g.msg = g.left ? t('gmScore', { s: s, a: a }) : t('gmLose', { s: s, a: a });
+      renderGame(R);
+    };
+  }
+  function confetti(host) {
+    if (FX.reduce) return;
+    var cols = ['#c9922e', '#3f7d4e', '#2e5e8c', '#f1c453', '#b73a2b'];
+    for (var i = 0; i < 70; i++) {
+      var p = document.createElement('i'); p.className = 'confetti';
+      p.style.left = (Math.random() * 100) + '%'; p.style.background = cols[i % cols.length];
+      p.style.animationDelay = (Math.random() * 0.4) + 's'; p.style.setProperty('--dx', (Math.random() * 160 - 80) + 'px'); p.style.setProperty('--r', (Math.random() * 720) + 'deg');
+      host.appendChild(p);
+      setTimeout(function (el) { return function () { el.remove(); }; }(p), 2600);
+    }
+  }
+
+  /* ---------- Voice summary ---------- */
+  function speechText(R) {
+    var u = R.user, v = u.crashRate <= 0.10 ? 'PASS' : (u.crashRate <= 0.25 ? 'DAMAGE' : 'CRASH');
+    var bad = farmYears(u).filter(function (x) { return x.m < 0; }).sort(function (a, b) { return a.m - b.m; }).slice(0, 3).map(function (x) { return x.year; }).sort();
+    var fixTxt = t('vNoFix');
+    if (R.fix) {
+      var e = R.fix.edit, f;
+      if (e.type === 'replace') f = t('fixReplace', { pos: e.pos + 1, to: cropName(e.to), from: cropName(e.from) });
+      else if (e.type === 'insert') f = t('fixInsert', { pos: e.pos + 1, to: cropName(e.to) });
+      else f = t('fixDelete', { pos: e.pos + 1, from: cropName(e.from) });
+      fixTxt = t('vFix', { fix: f, n: lossYears(R.fix) });
+    }
+    return t('vText', { verdict: t('resTitle') + ': ' + t('verdict' + v), n: lossYears(u), m: nYearsOf(u), yrs: bad.length ? t('vYears', { list: bad.join(', ') }) : '', fix: fixTxt, y50: t('vY50', { n: lossYears(R.y50.user) }) });
+  }
+  function renderVoiceBtn(R) {
+    if (!('speechSynthesis' in window)) return;
+    var box = $('verdict'); if ($('voice-btn')) return;
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'voice'; b.id = 'voice-btn';
+    b.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z" fill="currentColor"/></svg><span>' + esc(t('voice')) + '</span>';
+    b.onclick = function () {
+      var ss = window.speechSynthesis;
+      if (ss.speaking) { ss.cancel(); b.classList.remove('on'); b.lastChild.textContent = t('voice'); return; }
+      var u = new SpeechSynthesisUtterance(speechText(state.last));
+      u.lang = I18N.lang === 'ru' ? 'ru-RU' : (I18N.lang === 'kk' ? 'kk-KZ' : 'en-US');
+      var vs = ss.getVoices().filter(function (v) { return v.lang && v.lang.toLowerCase().indexOf(u.lang.slice(0, 2)) === 0; });
+      if (vs.length) u.voice = vs[0];
+      u.rate = 1;
+      u.onend = u.onerror = function () { b.classList.remove('on'); b.lastChild.textContent = t('voice'); };
+      b.classList.add('on'); b.lastChild.textContent = t('voiceStop');
+      ss.speak(u);
+    };
+    (box.firstElementChild || box).appendChild(b);
+  }
+
+  /* ---------- Field risk passport (printable page for a bank or insurer) ---------- */
+  function openPassport() {
+    var R = state.last; if (!R) return;
+    var u = R.user, h = M.soilHealthIndex(u), pr = premium(u), k = state.kzt || 500;
+    var bad = farmYears(u).filter(function (x) { return x.m < 0; }).sort(function (a, b) { return a.m - b.m; }).slice(0, 5);
+    var fixTxt = t('fixNone');
+    if (R.fix) {
+      var e = R.fix.edit;
+      fixTxt = e.type === 'replace' ? t('fixReplace', { pos: e.pos + 1, to: cropName(e.to), from: cropName(e.from) }) : (e.type === 'insert' ? t('fixInsert', { pos: e.pos + 1, to: cropName(e.to) }) : t('fixDelete', { pos: e.pos + 1, from: cropName(e.from) }));
+    }
+    var preset = (window.PRESETS || []).filter(function (p) { return p.id === state.presetId; })[0];
+    var place = (preset ? (preset.name[I18N.lang] || preset.name.en) + ', ' : '') + state.lat.toFixed(3) + ', ' + state.lon.toFixed(3);
+    var row = function (a, b) { return '<tr><th>' + esc(a) + '</th><td>' + b + '</td></tr>'; };
+    var html = '<!doctype html><html lang="' + I18N.lang + '"><head><meta charset="utf-8"><title>' + esc(t('ppTitle')) + '</title><style>' +
+      'body{font:14px/1.5 Arial,Helvetica,sans-serif;color:#18222c;max-width:760px;margin:24px auto;padding:0 20px}h1{font-size:26px;margin:0}h2{font-size:15px;margin:22px 0 6px;border-bottom:2px solid #c9922e;padding-bottom:4px}' +
+      'table{border-collapse:collapse;width:100%}th{text-align:left;width:34%;color:#5a6670;font-weight:600;padding:6px 8px;vertical-align:top}td{padding:6px 8px}tr+tr th,tr+tr td{border-top:1px solid #e6eae5}' +
+      '.k{display:flex;gap:10px;margin:14px 0}.k div{flex:1;border:1px solid #d5dbd4;border-radius:8px;padding:10px}.k b{display:block;font-size:22px}.k span{color:#5a6670;font-size:12px}.head{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:4px solid #13283b;padding-bottom:10px}' +
+      '.foot{color:#5a6670;font-size:12px;margin-top:26px}@media print{body{margin:0}}</style></head><body>' +
+      '<div class="head"><div><h1>' + esc(t('ppTitle')) + '</h1><div>' + esc(t('ppFor')) + '</div></div><div>' + esc(t('title')) + '</div></div>' +
+      '<div class="k"><div><span>' + esc(t('verdictPASS').length ? t('pillarReliability') : '') + '</span><b>' + pct(u.crashRate) + '%</b><span>' + esc(t('crash')) + '</span></div>' +
+      '<div><span>' + esc(t('insTitle')) + '</span><b>' + money(pr.el * k) + ' ₸/' + (I18N.lang === 'en' ? 'ha' : 'га') + '</b><span>' + esc(t('insLine', { p: pct(pr.p), l: money(pr.cond * k) })) + '</span></div>' +
+      '<div><span>' + esc(t('shiTitle')) + '</span><b>' + h.value + ' / 100</b><span>' + esc(t('y50Title')) + ': ' + lossYears(R.y50.user) + ' / ' + nYearsOf(u) + '</span></div></div>' +
+      '<h2>' + esc(t('ppField')) + '</h2><table>' + row(t('ppField'), esc(place)) + row(t('soil'), esc(t('clay')) + ' ' + R.soil.clay + ', ' + esc(t('sand')) + ' ' + R.soil.sand + ', ' + esc(t('soc')) + ' ' + R.soil.socGkg) +
+      row(t('irrigation'), R.opts.irrigation ? R.opts.quota + ' mm' : '—') + '</table>' +
+      '<h2>' + esc(t('ppPlan')) + '</h2><table>' + row(t('ppPlan'), esc(planText(R.plan))) + row(t('pillarProfit'), money(u.meanMargin) + ' $/ha') + row(t('altCols')[5], money(u.p10Margin) + ' $/ha') +
+      row(t('y50Now'), lossYears(u) + ' / ' + nYearsOf(u) + ' ' + esc(t('y50Years'))) + row(t('y50Then'), lossYears(R.y50.user) + ' / ' + nYearsOf(u) + ' ' + esc(t('y50Years'))) + '</table>' +
+      '<h2>' + esc(t('ppWorst')) + '</h2><table>' + bad.map(function (x) { return row(String(x.year), money(x.m) + ' $/ha'); }).join('') + '</table>' +
+      '<h2>' + esc(t('ppRec')) + '</h2><p>' + esc(fixTxt) + (R.fix ? ' ' + esc(t('fixGain', { c1: pct(u.crashRate), c2: pct(R.fix.crashRate), m1: money(u.meanMargin), m2: money(R.fix.meanMargin), s1: signed(u.socChangePct) + '%', s2: signed(R.fix.socChangePct) + '%' })) : '') + '</p>' +
+      '<p class="foot">' + esc(t('ppGenerated', { d: new Date().toISOString().slice(0, 10) })) + '</p><script>window.onload=function(){setTimeout(function(){window.print()},300)}<\/script></body></html>';
+    var w = window.open('', '_blank');
+    if (!w) { FX.toast('Pop-up blocked'); return; }
+    w.document.open(); w.document.write(html); w.document.close();
+  }
+
   /* ---------------------------------------------------------------- CSV: one reproducible calculation */
   function downloadCSV() {
     var R = state.last; if (!R) return;
@@ -1180,6 +1446,7 @@
     $('btn-print').onclick = function () { window.print(); };
     $('btn-csv').onclick = downloadCSV;
     $('btn-share').onclick = shareLink;
+    $('btn-passport').onclick = openPassport;
     ['farm-area', 'farm-carbon'].forEach(function (id) { $(id).oninput = function () { if (state.last) renderFarm(state.last); }; });
     initMap();
     initCompare();

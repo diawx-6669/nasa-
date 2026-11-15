@@ -726,7 +726,65 @@
       });
       r.score = keys.reduce(function (a, k) { return a + r.pillar[k] * (weights[k] || 0); }, 0) / wsum;
     });
+    results.norm = { lo: lo, hi: hi, weights: weights, irrigated: irrigated };
     return results;
+  }
+
+  /** Score one extra result on the same scale as an earlier scoreAll() (values may fall outside 0-100). */
+  function scoreOne(r, norm) {
+    var keys = ['profit', 'reliability', 'soil', 'water'], raw = pillars(r, norm.irrigated), w = norm.weights;
+    var wsum = keys.reduce(function (a, k) { return a + (w[k] || 0); }, 0) || 1;
+    r.pillar = {};
+    keys.forEach(function (k) {
+      var span = norm.hi[k] - norm.lo[k];
+      r.pillar[k] = span > 1e-9 ? (raw[k] - norm.lo[k]) / span * 100 : 50;
+    });
+    r.score = keys.reduce(function (a, k) { return a + r.pillar[k] * (w[k] || 0); }, 0) / wsum;
+    return r.score;
+  }
+
+  /**
+   * Absolute Soil Health Index, 0-100 (not relative to other rotations).
+   * 50 = neutral. Carbon trend (% per decade, 0 %/decade = +25, -5 %/decade = -25) +-25, living roots +-10, crop diversity up to +10,
+   * legumes up to +10, black fallow up to -15, monoculture -12, erosion-risk days up to -15.
+   */
+  function soilHealthIndex(r) {
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+    var parts = {
+      // carbon trend in % of the stock per decade (independent of how big the starting stock is)
+      carbon: clamp((r.socChangePct / Math.max(1, r.nYears) * 10 + 2.5) / 2.5, -1, 1) * 25,
+      roots: clamp((r.liveRootDays - 90) / 6, -10, 10),
+      diversity: clamp((r.families - 1) / 3 * 10, 0, 10),
+      legumes: clamp(r.legumeShare * 25, 0, 10),
+      fallow: -clamp(r.fallowShare * 45, 0, 15),
+      monoculture: r.distinctCrops === 1 ? -12 : 0,
+      erosion: -clamp(r.erosionDays * 2, 0, 15)
+    };
+    var v = 50;
+    for (var k in parts) v += parts[k];
+    return { value: Math.round(clamp(v, 0, 100)), parts: parts };
+  }
+
+  /**
+   * Copy of the prepared weather where `times` consecutive years starting at `startYear`
+   * are replaced by the weather of `srcYear` ("what if this drought came three years in a row?").
+   */
+  function repeatYear(W, srcYear, startYear, times) {
+    var keys = ['tmax', 'tmin', 'tmean', 'prec', 'et0', 'ws', 'gwr', 'rad', 'rh', 'fT', 't10'];
+    var W2 = {};
+    for (var k in W) W2[k] = W[k];
+    keys.forEach(function (key) { W2[key] = new Float32Array(W[key]); });
+    var s0 = dayIndex(W, srcYear, 1);
+    for (var t = 0; t < times; t++) {
+      var y = startYear + t, d0 = dayIndex(W, y, 1);
+      if (d0 < 0 || s0 < 0) continue;
+      var len = isLeap(y) ? 366 : 365;
+      for (var d = 0; d < len && d0 + d < W.n; d++) {
+        var src = s0 + Math.min(d, isLeap(srcYear) ? 365 : 364);
+        keys.forEach(function (key) { W2[key][d0 + d] = W[key][src]; });
+      }
+    }
+    return W2;
   }
 
   /** All distinct cyclic rotations (necklaces) of length 1..maxLen from candidate crops. */
@@ -918,7 +976,7 @@
     analogYears: analogYears,
     prepareWeather: prepareWeather, et0PM: et0PM, soilHydraulics: soilHydraulics,
     rotationEffects: rotationEffects, simulate: simulate, crashTest: crashTest, reprice: reprice,
-    pillars: pillars, scoreAll: scoreAll, enumeratePlans: enumeratePlans, neighbourPlans: neighbourPlans,
+    pillars: pillars, scoreAll: scoreAll, scoreOne: scoreOne, soilHealthIndex: soilHealthIndex, repeatYear: repeatYear, enumeratePlans: enumeratePlans, neighbourPlans: neighbourPlans,
     climateFingerprint: climateFingerprint, validateWetness: validateWetness, dayIndex: dayIndex
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;

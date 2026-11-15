@@ -104,3 +104,16 @@ test('autumn analog years: picks past years only and ranks the current autumn', 
   assert.ok(a.analogs.every(h => h.year < 2024));
   assert.ok(a.wetPct >= 0 && a.wetPct <= 100);
 });
+
+test('soil health index: pulses beat monoculture, black fallow scores lowest', () => {
+  const idx = plan => M.soilHealthIndex(M.crashTest(W, P.soil, plan, {})).value;
+  const pulses = idx(['pea', 'wheat', 'chickpea', 'barley']), mono = idx(['wheat']), fallow = idx(['fallow', 'wheat', 'wheat', 'barley']);
+  assert.ok(pulses > mono && mono > fallow, pulses + ' ' + mono + ' ' + fallow);
+});
+
+test('repeating a drought year three times makes those years worse', () => {
+  const plan = ['fallow', 'wheat', 'wheat', 'barley'];
+  const farm = (Wx, y) => { const r = M.crashTest(Wx, P.soil, plan, {}); const m = []; r.runs.forEach(run => run.seasons.forEach(s => { if (s.year === y) m.push(s.margin); })); return m.reduce((a, b) => a + b) / m.length; };
+  const W2 = M.repeatYear(W, 1998, 1998, 3);
+  assert.ok(farm(W2, 2000) < farm(W, 2000));
+});
