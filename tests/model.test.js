@@ -8,10 +8,10 @@ const load = require('./load.js');
 const P = load('akmola');
 const W = M.prepareWeather(P.weather, P.lat);
 
-test('NASA POWER preset is complete (1991-2025, no gaps)', () => {
-  assert.strictEqual(W.firstYear, 1991);
+test('NASA POWER preset is complete (1981-2025, no gaps)', () => {
+  assert.strictEqual(W.firstYear, 1981);
   assert.strictEqual(W.lastYear, 2025);
-  assert.strictEqual(W.n, 12784);
+  assert.strictEqual(W.n, 16436);
 });
 
 test('FAO-56 example: ET0 ~ 3.9 mm/day (Allen et al. 1998, Example 18)', () => {

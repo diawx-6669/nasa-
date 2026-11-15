@@ -9,7 +9,7 @@ Crop Rotation Crash Test
 Field Shift: Adapting Farms with NASA Data
 
 ## High-level summary (≈ 150 words)
-Advice to farmers about crop rotation is usually abstract. Our tool is concrete: it crash-tests the farmer's **own** rotation. The farmer clicks the field on a map, enters a rotation of 1–4 crops and sets sliders for income, reliability, soil health and water saving. The app downloads 35 years of daily NASA POWER weather and the soil for that exact point. It then drives the rotation through every real season since 1991 with a transparent soil-water, crop and soil-carbon model. The result shows which years would have wrecked the plan and why (drought, heat at flowering, frost, winter-kill, too-short rotation). It also searches ~800 alternative rotations and suggests the **smallest change** that helps most for the farmer's priorities, and it repeats the test for a +1.5 °C and a +2.5 °C / −10 % rain climate. For a typical North-Kazakhstan plan (fallow–wheat–wheat–barley), replacing the second wheat with chickpea cuts crash seasons from 7 % to 3 % and raises the average margin from ~$60 to ~$100 per hectare per year. These numbers use our illustrative prices.
+Advice to farmers about crop rotation is usually abstract. Our tool is concrete: it crash-tests the farmer's **own** rotation. The farmer clicks the field on a map, enters a rotation of 1–4 crops and sets sliders for income, reliability, soil health and water saving. The app downloads 45 years of daily NASA POWER weather and the soil for that exact point. It then drives the rotation through every real season since 1982 with a transparent soil-water, crop and soil-carbon model. The result shows which years would have wrecked the plan and why (drought, heat at flowering, frost, winter-kill, too-short rotation). A click on any year explains it in plain numbers, for example: in 1998 spring wheat needed 385 mm of water and the rain gave 81 mm. It also searches ~800 alternative rotations and suggests the **smallest change** that helps most for the farmer's priorities, and it repeats the test for a +1.5 °C and a +2.5 °C / −10 % rain climate and for prices ±20 %. MODIS imagery from NASA GIBS shows crop greenness for any year and how the Aral Sea shrank between 2000 and 2014. For a typical North-Kazakhstan plan (fallow–wheat–wheat–barley), replacing the second wheat with chickpea cuts crash seasons from 7 % to 5 % and raises the average margin from about $56 to $99 per hectare per year (with our starting prices, which farmers can edit).
 
 ## Project details
 - **What it does:** see README “What it does”.
@@ -20,8 +20,9 @@ Advice to farmers about crop rotation is usually abstract. Our tool is concrete:
 - **Factors considered:** honesty about uncertainty (illustrative prices that can be edited, a limitations section); a sowing calendar that works anywhere; snow, which matters a lot in Kazakhstan; irrigation quotas for the south; and soil carbon, not only yield.
 
 ## NASA data
-- NASA POWER daily point API, Agroclimatology community, 1991-01-01 to 2025-12-31: T2M_MAX, T2M_MIN, PRECTOTCORR, ALLSKY_SFC_SW_DWN, RH2M, WS2M (MERRA-2 meteorology, CERES/GEWEX solar). https://power.larc.nasa.gov/
-- NASA MERRA-2 root-zone soil wetness (GWETROOT) via POWER: used to validate the model. At the Kazakhstan example farms the monthly anomaly correlation is about 0.6–0.8.
+- NASA POWER daily point API, Agroclimatology community, 1981-01-01 to 2025-12-31: T2M_MAX, T2M_MIN, PRECTOTCORR, ALLSKY_SFC_SW_DWN, RH2M, WS2M (MERRA-2 meteorology, CERES/GEWEX solar). https://power.larc.nasa.gov/
+- NASA MERRA-2 root-zone soil wetness (GWETROOT) via POWER: used to validate the model. Monthly anomaly correlation r = 0.67–0.83 at six of seven example farms (0.18 in the Kyzylorda desert).
+- MODIS Terra via NASA GIBS: 16-day NDVI tiles (MODIS_Terra_L3_NDVI_16Day) on the map; true-colour images (MODIS_Terra_CorrectedReflectance_TrueColor) of the Aral Sea on 2000-08-21 and 2014-08-19. https://gibs.earthdata.nasa.gov/
 
 ## Space agency partner & other data
 - ISRIC SoilGrids 2.0 (soil texture, organic carbon, bulk density, 0–30 cm), CC-BY 4.0.

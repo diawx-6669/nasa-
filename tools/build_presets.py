@@ -16,7 +16,7 @@ import urllib.request
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "data", "presets")
 
-START, END = "19910101", "20251231"
+START, END = "19810101", "20251231"
 PARAMS = ["T2M_MAX", "T2M_MIN", "PRECTOTCORR", "ALLSKY_SFC_SW_DWN", "RH2M", "WS2M", "GWETROOT"]
 # decimals kept per parameter (keeps files small, far below data accuracy anyway)
 DEC = {"T2M_MAX": 1, "T2M_MIN": 1, "PRECTOTCORR": 1, "ALLSKY_SFC_SW_DWN": 1,
@@ -29,6 +29,7 @@ PRESETS = [
     ("nko", "North Kazakhstan (Petropavl), KZ", "Северо-Казахстанская обл., КЗ", 54.70, 69.50),
     ("pavlodar", "Pavlodar region, KZ", "Павлодарская обл., КЗ", 52.00, 76.50),
     ("turkistan", "Turkistan region (irrigated south), KZ", "Туркестанская обл. (орошаемый юг), КЗ", 43.30, 68.30),
+    ("kyzylorda", "Kyzylorda region (Syr Darya, irrigated), KZ", "Кызылординская обл. (Сырдарья, орошение), КЗ", 44.80, 65.40),
     ("kansas", "Kansas, USA (for comparison)", "Канзас, США (для сравнения)", 38.50, -98.50),
 ]
 

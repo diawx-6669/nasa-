@@ -53,6 +53,15 @@
     return Math.max(0, et0);
   }
 
+  function extraterrestrial(lat, doy) {
+    var phi = lat * Math.PI / 180;
+    var dr = 1 + 0.033 * Math.cos(2 * Math.PI * doy / 365);
+    var dec = 0.409 * Math.sin(2 * Math.PI * doy / 365 - 1.39);
+    var ws = Math.acos(Math.max(-1, Math.min(1, -Math.tan(phi) * Math.tan(dec))));
+    return 24 * 60 / Math.PI * 0.082 * dr * (ws * Math.sin(phi) * Math.sin(dec) + Math.cos(phi) * Math.cos(dec) * Math.sin(ws));
+  }
+  function hargreavesRs(tx, tn, lat, doy) { return 0.16 * Math.sqrt(Math.max(0, tx - tn)) * extraterrestrial(lat, doy); }
+
   function isLeap(y) { return (y % 4 === 0 && y % 100 !== 0) || y % 400 === 0; }
 
   /**
@@ -85,7 +94,9 @@
       var tn = val(raw.T2M_MIN, k, 'tmin') + scenario.dT;
       if (tn > tx) { var tt = tn; tn = tx; tx = tt; }
       var p = Math.max(0, val(raw.PRECTOTCORR, k, 'p')) * scenario.pFactor;
-      var rs = Math.max(0, val(raw.ALLSKY_SFC_SW_DWN, k, 'rs'));
+      // POWER solar radiation starts in 1984: before that use the FAO-56 Hargreaves estimate (eq. 50)
+      var rsRaw = raw.ALLSKY_SFC_SW_DWN ? raw.ALLSKY_SFC_SW_DWN[k] : null;
+      var rs = (rsRaw === null || rsRaw === undefined || rsRaw === -999) ? hargreavesRs(tx, tn, lat, dd) : Math.max(0, rsRaw);
       var rh = val(raw.RH2M, k, 'rh');
       var u2 = Math.max(0.3, val(raw.WS2M, k, 'ws'));
       var g = raw.GWETROOT ? raw.GWETROOT[k] : null;
@@ -246,7 +257,7 @@
       // --- evapotranspiration
       var ETc = 0, ETa = 0, irr = 0;
       var snowCovered = snow > 5;
-      if (s && s.sown && !s.done) {
+      if (s && s.sown && !s.done && !crop.fallow) {
         var c = crop;
         var f = s.f;
         var Kc;
@@ -267,6 +278,8 @@
         var Ks = WA >= thr ? 1 : Math.max(0, WA / thr);
         ETa = Math.min(WA, Ks * ETc);
         WA -= ETa;
+        s.rain += p; s.et0s += et0; s.irrD += irr;
+        if (s.trace) { s.trace.etc.push(ETc); s.trace.eta.push(ETa); s.trace.rain.push(p); s.trace.irr.push(irr); }
         if (!dormant) {
           A.live++;
           s.etc += ETc; s.eta += ETa;
@@ -341,6 +354,7 @@
         slot: i, pos: pos, crop: c.id, year: year, start: open, sowEnd: open + win, harvestBy: open + win + maxLen,
         never: never,
         sown: false, done: false, f: 0, gdd: 0, etc: 0, eta: 0, etcF: 0, etaF: 0, irr: 0,
+        rain: 0, et0s: 0, irrD: 0, store: 0, trace: null,
         heatDeg: 0, heatDays: 0, frostSeed: false, frostFlower: 0, winterKill: 0, immature: false,
         killedAt: null, sowDay: -1, harvestDay: -1, lateDays: 0, notSown: false, rot: rot[pos]
       };
@@ -454,6 +468,8 @@
             if (s.never || k > s.sowEnd + 20) { s.notSown = true; }
             else {
               s.sown = true; s.sowDay = k; s.lateDays = Math.max(0, k - s.sowEnd);
+              s.store = WA + WB;
+              if (opts.traceYear === s.year) s.trace = { day0: k, etc: [], eta: [], rain: [], irr: [] };
               cover = Math.min(cover, 0.3); tilledBare = false;
             }
           }
@@ -548,8 +564,13 @@
     var crop = all.filter(function (s) { return crops[s.crop].harvestable; });
     var nYears = runs[0].seasons.length;
     var Y0 = runs[0].Y0, Y1 = W.lastYear;
-    var mid = Math.floor((Y0 + Y1) / 2);
+    // fixed split for the "is risk growing?" comparison (1981-2002 vs 2003-2025)
+    var split = (opts && opts.splitYear) || 2002;
+    var mid = (split > Y0 + 4 && split < Y1 - 4) ? split : Math.floor((Y0 + Y1) / 2);
     var margins = all.map(function (s) { return s.margin; });
+    // margin per calendar year averaged over phases -> how volatile is the farm income?
+    var perYear = {};
+    all.forEach(function (s) { (perYear[s.year] = perYear[s.year] || []).push(s.margin); });
     var crashes = crop.filter(function (s) { return s.outcome === 'crash'; });
     var dents = crop.filter(function (s) { return s.outcome === 'dent'; });
     var causes = {};
@@ -599,15 +620,14 @@
     });
     function periodStats(a, b) {
       var ss = crop.filter(function (s) { return s.year >= a && s.year <= b; });
+      var ys = Object.keys(perYear).filter(function (y) { return y >= a && y <= b; });
       return {
-        from: a, to: b,
+        from: a, to: b, years: ys.length,
+        lossYears: ys.filter(function (y) { return mean(perYear[y]) < 0; }).length,
         crashRate: ss.length ? ss.filter(function (s) { return s.outcome === 'crash'; }).length / ss.length : 0,
         meanMargin: mean(all.filter(function (s) { return s.year >= a && s.year <= b; }).map(function (s) { return s.margin; }))
       };
     }
-    // margin per calendar year averaged over phases -> how volatile is the farm income?
-    var perYear = {};
-    all.forEach(function (s) { (perYear[s.year] = perYear[s.year] || []).push(s.margin); });
     var yearMargins = Object.keys(perYear).map(function (y) { return mean(perYear[y]); });
     return {
       plan: plan.slice(),
@@ -635,6 +655,36 @@
       early: periodStats(Y0, mid),
       late: periodStats(mid + 1, Y1)
     };
+  }
+
+  /**
+   * Re-price a crash-test result without re-simulating: all crop prices multiplied by f.
+   * Returns a shallow copy with income / reliability metrics recomputed from the stored seasons.
+   */
+  function reprice(r, f, crops) {
+    crops = crops || CropDB.BY_ID;
+    var o = {}; for (var k in r) o[k] = r[k];
+    var n = 0, sum = 0, nc = 0, cr = 0, dn = 0, perYear = {};
+    r.runs.forEach(function (run) {
+      run.seasons.forEach(function (s) {
+        var rev = s.revenue * f, m = rev - s.cost;
+        n++; sum += m;
+        (perYear[s.year] = perYear[s.year] || []).push(m);
+        if (crops[s.crop].harvestable) {
+          nc++;
+          if (s.notSown || rev < 0.5 * s.cost || s.rel < 0.2) cr++;
+          else if (m < 0) dn++;
+        }
+      });
+    });
+    o.meanMargin = n ? sum / n : 0;
+    o.crashRate = nc ? cr / nc : 0;
+    o.dentRate = nc ? dn / nc : 0;
+    o.p10Margin = percentile(Object.keys(perYear).map(function (y) {
+      var a = perYear[y]; return a.reduce(function (x, z) { return x + z; }, 0) / a.length;
+    }), 0.1);
+    o.base = r;
+    return o;
   }
 
   /* ------------------------------------------------------------------ */
@@ -824,7 +874,7 @@
 
   var api = {
     prepareWeather: prepareWeather, et0PM: et0PM, soilHydraulics: soilHydraulics,
-    rotationEffects: rotationEffects, simulate: simulate, crashTest: crashTest,
+    rotationEffects: rotationEffects, simulate: simulate, crashTest: crashTest, reprice: reprice,
     pillars: pillars, scoreAll: scoreAll, enumeratePlans: enumeratePlans, neighbourPlans: neighbourPlans,
     climateFingerprint: climateFingerprint, validateWetness: validateWetness, dayIndex: dayIndex
   };

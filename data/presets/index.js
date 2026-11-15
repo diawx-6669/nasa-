@@ -45,6 +45,15 @@ window.PRESETS=[
   }
  },
  {
+  "id": "kyzylorda",
+  "lat": 44.8,
+  "lon": 65.4,
+  "name": {
+   "en": "Kyzylorda region (Syr Darya, irrigated), KZ",
+   "ru": "Кызылординская обл. (Сырдарья, орошение), КЗ"
+  }
+ },
+ {
   "id": "kansas",
   "lat": 38.5,
   "lon": -98.5,
