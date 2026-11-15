@@ -10,7 +10,9 @@
       heroStripCaption: 'Fallow, wheat, wheat, barley near Astana. Each bar is one real year; red bars are years that cost the farm more than half of what it invested.',
       heroData: 'Data: NASA POWER (MERRA-2, CERES), MODIS via NASA GIBS, ISRIC SoilGrids',
       navFarm: 'Farm', navPlan: 'Rotation', navPrio: 'Priorities', navReport: 'Report', navSat: 'Satellite', navMethod: 'Method',
-      step1: 'Where is your field?', step2: 'What do you plan to sow?', step3: 'What matters most to you?',
+      step1: 'Where is your field?',
+      step1Hint: 'Pick an example farm or click your field on the map. We download its daily NASA weather since 1981 and its soil.',
+      crashShort: 'Crash', footData: 'Data', step2: 'What do you plan to sow?', step3: 'What matters most to you?',
       presets: 'Example farms with real NASA data (they also work offline)',
       orMap: 'Or click your field on the map, or type its coordinates',
       lat: 'Latitude', lon: 'Longitude', loadNasa: 'Load NASA data for this point',
@@ -132,7 +134,9 @@
       heroStripCaption: 'Пар, пшеница, пшеница, ячмень под Астаной. Каждый столбик — реальный год; красные — годы, когда хозяйство потеряло больше половины вложений.',
       heroData: 'Данные: NASA POWER (MERRA-2, CERES), MODIS через NASA GIBS, ISRIC SoilGrids',
       navFarm: 'Поле', navPlan: 'Севооборот', navPrio: 'Приоритеты', navReport: 'Отчёт', navSat: 'Спутник', navMethod: 'Метод',
-      step1: 'Где ваше поле?', step2: 'Что вы планируете сеять?', step3: 'Что для вас важнее?',
+      step1: 'Где ваше поле?',
+      step1Hint: 'Выберите пример хозяйства или кликните своё поле на карте. Мы скачаем ежедневную погоду NASA с 1981 года и данные о почве.',
+      crashShort: 'Авария', footData: 'Данные', step2: 'Что вы планируете сеять?', step3: 'Что для вас важнее?',
       presets: 'Примеры хозяйств с реальными данными NASA (работают и без интернета)',
       orMap: 'Или кликните своё поле на карте, или введите координаты',
       lat: 'Широта', lon: 'Долгота', loadNasa: 'Загрузить данные NASA для этой точки',
@@ -250,14 +254,12 @@
   S.ru.fixGain = 'Аварии: {c1}% → {c2}%; доход: {m1} → {m2} $/га в год; углерод почвы: {s1} → {s2}.';
   S.en.fixGain = 'Crashes: {c1}% → {c2}%; income: {m1} → {m2} $/ha a year; soil carbon: {s1} → {s2}.';
 
+  // The site always opens in English; ?lang=ru in the address opens it in Russian.
   var lang = 'en';
   try {
     var q = (location.search.match(/[?&]lang=(en|ru)/) || [])[1];
-    var saved = localStorage.getItem('crt-lang');
     if (q) lang = q;
-    else if (saved === 'ru' || saved === 'en') lang = saved;
-    else if (/^(ru|kk)/.test(navigator.language || '')) lang = 'ru';
-  } catch (e) { /* storage may be blocked */ }
+  } catch (e) { /* ignore */ }
 
   function t(key, vars) {
     var s = S[lang][key];
@@ -272,6 +274,6 @@
   root.I18N = {
     t: t,
     get lang() { return lang; },
-    set: function (l) { lang = l; try { localStorage.setItem('crt-lang', l); } catch (e) { /* ignore */ } }
+    set: function (l) { lang = l; }
   };
 })(this);

@@ -7,9 +7,6 @@
 <meta name="description" content="Test a crop rotation against every real season since 1982 on your field, using NASA POWER weather and MODIS imagery. NASA Space Apps Challenge 2026.">
 <meta name="theme-color" content="#13283b">
 <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="vendor/leaflet/leaflet.css">
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -32,6 +29,7 @@
 </header>
 
 <section class="hero" id="top">
+  <svg class="furrows" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 1200 600"><defs><linearGradient id="fg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9922e" stop-opacity="0"/><stop offset="1" stop-color="#c9922e" stop-opacity=".22"/></linearGradient></defs><g stroke="url(#fg)" stroke-width="1.2" fill="none" id="furrow-lines"></g></svg>
   <div class="wrap hero-in">
     <div class="hero-text">
       <h1 data-i18n="heroTitle"></h1>
@@ -41,6 +39,7 @@
     <figure class="strip" aria-hidden="false">
       <div class="strip-bars" id="hero-strip"></div>
       <div class="strip-axis" id="hero-axis"></div>
+      <div class="strip-key"><span><i class="k-ok"></i><b data-i18n="ok"></b></span><span><i class="k-dent"></i><b data-i18n="dent"></b></span><span><i class="k-crash"></i><b data-i18n="crashShort"></b></span></div>
       <figcaption data-i18n="heroStripCaption"></figcaption>
     </figure>
   </div>
@@ -49,7 +48,7 @@
 
 <main class="wrap">
   <section class="step" id="step-farm">
-    <header class="step-h"><span class="step-n">1</span><h2 data-i18n="step1"></h2></header>
+    <header class="step-h"><span class="step-n">1</span><div><h2 data-i18n="step1"></h2><p class="muted" data-i18n="step1Hint"></p></div></header>
     <div class="farm-grid">
       <div class="map-col">
         <div id="map" class="map" aria-label="Map"></div>
@@ -91,14 +90,12 @@
   </section>
 
   <section class="step" id="step-plan">
-    <header class="step-h"><span class="step-n">2</span><h2 data-i18n="step2"></h2></header>
-    <p class="muted" data-i18n="planHint"></p>
+    <header class="step-h"><span class="step-n">2</span><div><h2 data-i18n="step2"></h2><p class="muted" data-i18n="planHint"></p></div></header>
     <ol id="plan" class="plan"></ol>
   </section>
 
   <section class="step" id="step-prio">
-    <header class="step-h"><span class="step-n">3</span><h2 data-i18n="step3"></h2></header>
-    <p class="muted" data-i18n="prioHint"></p>
+    <header class="step-h"><span class="step-n">3</span><div><h2 data-i18n="step3"></h2><p class="muted" data-i18n="prioHint"></p></div></header>
     <div class="sliders">
       <label><span data-i18n="pProfit"></span><output></output><input type="range" min="0" max="5" value="3" id="w-profit"></label>
       <label><span data-i18n="pReliability"></span><output></output><input type="range" min="0" max="5" value="4" id="w-reliability"></label>
@@ -245,9 +242,18 @@
 </main>
 
 <footer class="foot">
-  <div class="wrap small">
-    <span class="lb" data-l="en">Made by a team of 9th-grade students from Astana, Kazakhstan, for NASA Space Apps Challenge 2026 (challenge “Field Shift: Adapting Farms with NASA Data”). Weather: NASA POWER. Imagery: NASA GIBS / MODIS. Soil: ISRIC SoilGrids. NASA does not endorse this project.</span>
-    <span class="lb" data-l="ru">Сделано командой девятиклассников из Астаны для NASA Space Apps Challenge 2026 (челлендж «Field Shift: Adapting Farms with NASA Data»). Погода: NASA POWER. Снимки: NASA GIBS / MODIS. Почва: ISRIC SoilGrids. NASA не одобряет этот проект официально.</span>
+  <div class="wrap foot-in">
+    <div class="foot-brand"><img src="assets/logo.svg" alt="" width="36" height="36"><div><b data-i18n="title"></b>
+      <p class="lb" data-l="en">Made by a team of 9th-grade students from Astana, Kazakhstan, for NASA Space Apps Challenge 2026, challenge “Field Shift: Adapting Farms with NASA Data”.</p>
+      <p class="lb" data-l="ru">Сделано командой девятиклассников из Астаны для NASA Space Apps Challenge 2026, челлендж «Field Shift: Adapting Farms with NASA Data».</p></div></div>
+    <div class="foot-data">
+      <b data-i18n="footData"></b>
+      <a href="https://power.larc.nasa.gov/" rel="noopener">NASA POWER</a>
+      <a href="https://gibs.earthdata.nasa.gov/" rel="noopener">NASA GIBS / MODIS</a>
+      <a href="https://gmao.gsfc.nasa.gov/reanalysis/MERRA-2/" rel="noopener">NASA MERRA-2</a>
+      <a href="https://soilgrids.org/" rel="noopener">ISRIC SoilGrids</a>
+    </div>
+    <p class="foot-note small"><span class="lb" data-l="en">NASA does not endorse this project.</span><span class="lb" data-l="ru">NASA не одобряет этот проект официально.</span></p>
   </div>
 </footer>
 

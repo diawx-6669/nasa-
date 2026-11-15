@@ -678,7 +678,7 @@
         lvBox.appendChild(d);
       });
     }
-    $('price-range').oninput = upd; upd();
+    $('price-range').oninput = upd; upd(); paintAllRanges();
   }
 
   function renderScenario(R) {
@@ -796,8 +796,28 @@
     };
   }
 
+  /* ---------------------------------------------------------------- decoration */
+  function paintRange(inp) {
+    var min = +inp.min || 0, max = +inp.max || 100;
+    inp.style.setProperty('--fill', ((+inp.value - min) / (max - min) * 100) + '%');
+  }
+  function paintAllRanges() { document.querySelectorAll('input[type=range]').forEach(paintRange); }
+  function drawFurrows() {
+    // field rows converging to a horizon point: the hero's background
+    var g = $('furrow-lines'); if (!g) return;
+    var ns = 'http://www.w3.org/2000/svg', vx = 900, vy = 40;
+    for (var i = -30; i <= 30; i++) {
+      var l = document.createElementNS(ns, 'line');
+      l.setAttribute('x1', vx + i * 6); l.setAttribute('y1', vy);
+      l.setAttribute('x2', vx + i * 70); l.setAttribute('y2', 600);
+      g.appendChild(l);
+    }
+  }
+
   /* ---------------------------------------------------------------- wiring */
   function init() {
+    drawFurrows();
+    document.addEventListener('input', function (e) { if (e.target.type === 'range') paintRange(e.target); });
     document.querySelectorAll('.lang button').forEach(function (b) { b.onclick = function () { I18N.set(b.getAttribute('data-lang')); applyI18n(); }; });
     document.querySelectorAll('.sliders input').forEach(function (inp) {
       var out = inp.previousElementSibling, upd = function () { out.textContent = inp.value; };
@@ -812,6 +832,7 @@
     initMap();
     initCompare();
     applyI18n();
+    paintAllRanges();
     loadPreset('akmola');
     renderHeroStrip();
   }
