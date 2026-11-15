@@ -57,7 +57,7 @@ a { color: var(--data); }
 .muted { color: var(--muted); }
 .label { font-weight: 600; margin: 18px 0 8px; font-size: .95rem; }
 .lb { display: none; }
-html[lang="en"] .lb[data-l="en"], html[lang="ru"] .lb[data-l="ru"] { display: revert; }
+html[lang="en"] .lb[data-l="en"], html[lang="ru"] .lb[data-l="ru"], html[lang="kk"] .lb[data-l="kk"] { display: revert; }
 
 /* ---------- top bar ---------- */
 .bar { position: sticky; top: 0; z-index: 1000; background: var(--night); color: #fff; border-bottom: 1px solid rgba(255,255,255,.08); }
@@ -617,3 +617,9 @@ tr.me:hover td { background: #f7ecd4; }
 .voice:hover { background: rgba(255,255,255,.14); transform: translateY(-1px); }
 .voice.on { background: var(--wheat); color: var(--wheat-ink); border-color: var(--wheat); animation: pulseVoice 1.2s ease-in-out infinite; }
 @keyframes pulseVoice { 50% { box-shadow: 0 0 0 8px rgba(201,146,46,.2); } }
+@media (max-width: 480px) {
+  .brand span { display: none; }
+  .lang button { padding: 6px 8px; }
+  .rb-text { flex: 1 1 auto; }
+  .runbar .btn { flex: none; max-width: 58%; white-space: normal; line-height: 1.2; }
+}

@@ -405,12 +405,12 @@
   // The site always opens in English; ?lang=ru in the address opens it in Russian.
   var lang = 'en';
   try {
-    var q = (location.search.match(/[?&]lang=(en|ru)/) || [])[1];
+    var q = (location.search.match(/[?&]lang=(en|ru|kk)/) || [])[1];
     if (q) lang = q;
   } catch (e) { /* ignore */ }
 
   function t(key, vars) {
-    var s = S[lang][key];
+    var s = (S[lang] || {})[key];
     if (s === undefined) s = S.en[key];
     if (s === undefined) return key;
     if (typeof s === 'string' && vars) {
@@ -422,6 +422,7 @@
   root.I18N = {
     t: t,
     get lang() { return lang; },
-    set: function (l) { lang = l; }
+    set: function (l) { lang = l; },
+    add: function (code, dict) { S[code] = dict; }
   };
 })(this);

@@ -90,6 +90,9 @@ def soil(lat, lon):
     return None
 
 
+KK_NAMES = {"akmola": "Ақмола облысы (Астана маңы), ҚЗ", "kostanay": "Қостанай облысы, ҚЗ", "nko": "Солтүстік Қазақстан облысы (Петропавл), ҚЗ", "pavlodar": "Павлодар облысы, ҚЗ", "turkistan": "Түркістан облысы (суармалы оңтүстік), ҚЗ", "kyzylorda": "Қызылорда облысы (Сырдария, суару), ҚЗ", "kansas": "Канзас, АҚШ (салыстыру үшін)"}
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     index = []
@@ -108,7 +111,7 @@ def main():
             f.write("window.PRESET_DATA=window.PRESET_DATA||{};window.PRESET_DATA[" + json.dumps(pid) + "]=")
             json.dump(obj, f, separators=(",", ":"))
             f.write(";\n")
-        index.append({"id": pid, "lat": lat, "lon": lon, "name": {"en": en, "ru": ru}})
+        index.append({"id": pid, "lat": lat, "lon": lon, "name": {"en": en, "ru": ru, "kk": KK_NAMES.get(pid, en)}})
     if not only:
         with open(os.path.join(OUT, "index.js"), "w") as f:
             f.write("window.PRESETS=")

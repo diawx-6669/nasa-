@@ -32,6 +32,15 @@ Car makers crash-test a car before anyone drives it. We do the same for a farmer
    - **How much irrigation water pays off**: income and crashes for seasonal quotas from 0 to 800 mm;
    - **Side-by-side comparison** of your rotation with any alternative;
    - **Your whole farm**: totals for the farm area and the soil-carbon difference in tonnes of CO₂ and dollars at a chosen carbon price;
+   - **Climate 2050**: the same seasons +2 °C and −10 % rain, loss years now vs 2050 and a 2050 crash map (a simplified scenario, not a forecast);
+   - an absolute **soil health index** (0–100) with its components;
+   - a **crop insurance calculator**: loss risk and a fair premium in tenge;
+   - **worst case in a row**: a drought year repeated 2–4 times;
+   - **water per kilogram** of grain for each crop;
+   - **wind erosion and the Virgin Lands**: windy spring days from NASA POWER WS2M;
+   - a **game**: beat the AI optimiser in five tries;
+   - a **voice summary** (browser speech) and a printable **field risk passport** for a bank or insurer;
+   - the interface in **English, Russian and Kazakh** (the Kazakh text was machine-assisted and should be checked by a native speaker);
    - a **link** that reopens the same test (location, rotation, priorities) on another computer;
    - a printable report and a downloadable season-by-season calculation (CSV with weather, water need and use, yield and profit, plus all inputs).
 

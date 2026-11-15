@@ -35,7 +35,7 @@
   function countUp(el) {
     var to = parseFloat(el.getAttribute('data-count'));
     var dec = +(el.getAttribute('data-dec') || 0), pre = el.getAttribute('data-prefix') || '', suf = el.getAttribute('data-suffix') || '';
-    var loc = document.documentElement.lang === 'ru' ? 'ru-RU' : 'en-US';
+    var loc = document.documentElement.lang === 'en' ? 'en-US' : 'ru-RU';
     el.removeAttribute('data-count');
     if (isNaN(to)) return;
     if (reduce) { el.textContent = pre + fmt(to, dec, loc) + suf; return; }

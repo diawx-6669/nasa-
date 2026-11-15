@@ -28,7 +28,9 @@
   function planText(plan) { return plan.map(cropName).join(', '); }
   function causeName(c) { var m = t('causes'); return (m && m[c]) || c || t('none'); }
   function pct(x) { return Math.round(x * 100); }
-  function money(x) { return Math.round(x).toLocaleString(I18N.lang === 'ru' ? 'ru-RU' : 'en-US'); }
+  /** Pick a string by interface language: Lx(en, ru, kk). (Not 'L': that is Leaflet.) */
+  function Lx(en, ru, kk) { return I18N.lang === 'ru' ? ru : (I18N.lang === 'kk' ? (kk || ru) : en); }
+  function money(x) { return Math.round(x).toLocaleString(I18N.lang === 'en' ? 'en-US' : 'ru-RU'); }
   function signed(x, d) { var v = (+x).toFixed(d === undefined ? 1 : d); return (x > 0 ? '+' : '') + v; }
   function mean(a) { return a && a.length ? a.reduce(function (x, y) { return x + y; }, 0) / a.length : 0; }
   function uniq(a) { var s = {}; return a.filter(function (x) { if (s[x]) return false; s[x] = 1; return true; }); }
@@ -40,7 +42,7 @@
   function dateStr(W, k) { var d = dateOf(W, k); return d ? d.toISOString().slice(0, 10) : ''; }
   function shortDate(W, k) {
     var d = dateOf(W, k); if (!d) return '';
-    return d.toLocaleDateString(I18N.lang === 'ru' ? 'ru-RU' : 'en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+    return d.toLocaleDateString(I18N.lang === 'ru' ? 'ru-RU' : (I18N.lang === 'kk' ? 'kk-KZ' : 'en-GB'), { day: 'numeric', month: 'short', timeZone: 'UTC' });
   }
 
   /* ---------------------------------------------------------------- i18n */
@@ -592,7 +594,7 @@
     var mx = Math.max(need, rain + store + irr, 1);
     function bar(label, parts, val) {
       var tr = parts.map(function (p) { return '<i style="width:' + (p[0] / mx * 100).toFixed(1) + '%;background:' + p[1] + '"></i>'; }).join('');
-      return '<div class="wbar"><span>' + esc(label) + '</span><div class="track">' + tr + '</div><b>' + val + (I18N.lang === 'ru' ? ' мм' : ' mm') + '</b></div>';
+      return '<div class="wbar"><span>' + esc(label) + '</span><div class="track">' + tr + '</div><b>' + val + Lx(' mm', ' мм', ' мм') + '</b></div>';
     }
     left += '<div class="wbars">' + bar(t('barNeed'), [[need, '#13283b']], need) +
       bar(t('barRain'), [[rain, '#2e5e8c']], rain) +
@@ -774,10 +776,10 @@
     });
     var cy = R.clim.years, ru = I18N.lang === 'ru';
     Charts.chart($('ch-climate'), {
-      x: cy.map(function (r) { return r.year; }), unitRight: ru ? 'дни' : 'days',
+      x: cy.map(function (r) { return r.year; }), unitRight: Lx('days', 'дни', 'күн'),
       series: [
-        { type: 'bar', name: ru ? 'осадки, мм' : 'rain, mm', values: cy.map(function (r) { return r.prec; }), color: '#2e5e8c' },
-        { type: 'line', name: ru ? 'дни ≥ 30 °C' : 'days ≥ 30 °C', values: cy.map(function (r) { return r.hot; }), color: '#c9922e', axis: 'right' }
+        { type: 'bar', name: Lx('rain, mm', 'осадки, мм', 'жауын-шашын, мм'), values: cy.map(function (r) { return r.prec; }), color: '#2e5e8c' },
+        { type: 'line', name: Lx('days ≥ 30 °C', 'дни ≥ 30 °C', '≥ 30 °C күндер'), values: cy.map(function (r) { return r.hot; }), color: '#c9922e', axis: 'right' }
       ]
     });
     var tr = R.clim.trend;
@@ -791,7 +793,7 @@
         x: rows.map(function (r) { return r.y + '-' + String(r.mo + 1).padStart(2, '0'); }),
         series: [
           { type: 'line', name: 'NASA MERRA-2 GWETROOT', values: rows.map(function (r) { return r.ag / sg; }), color: '#2e5e8c' },
-          { type: 'line', name: ru ? 'Наша модель' : 'Our model', values: rows.map(function (r) { return r.am / sm; }), color: '#c9922e', dash: '4 3' }
+          { type: 'line', name: Lx('Our model', 'Наша модель', 'Біздің модель'), values: rows.map(function (r) { return r.am / sm; }), color: '#c9922e', dash: '4 3' }
         ]
       });
       $('ch-valid-hint').textContent = t('chValidHint', { r: v.rAnom.toFixed(2), n: v.n }) + ' ' +
@@ -978,7 +980,7 @@
   function drawOutlook(R, a) {
     var W = getW('hist');
     var prevSel = state.olPrev && DB.BY_ID[state.olPrev] ? state.olPrev : R.plan[R.plan.length - 1];
-    var dt = shortDate(a.W2, a.lastIdx), from = I18N.lang === 'ru' ? (R.lat >= 0 ? '1 августа' : '1 февраля') : (R.lat >= 0 ? '1 August' : '1 February');
+    var dt = shortDate(a.W2, a.lastIdx), from = R.lat >= 0 ? Lx('1 August', '1 августа', '1 тамыздан') : Lx('1 February', '1 февраля', '1 ақпаннан');
     var html = '<p class="why-big">' + esc(t('olState', { date: dt + ' ' + a.year, wp: a.wetPct, rain: Math.round(a.cur.prec), from: from, pp: a.precPct })) + '</p>';
     html += '<div class="worst"><span class="muted">' + esc(t('olAnalogs')) + '</span>' + a.analogs.map(function (h) { return '<span class="pill">' + h.year + '</span>'; }).join('') + '</div>';
     html += '<label class="inline ol-prev"><span>' + esc(t('olPrev', { y: a.year })) + '</span><select id="ol-prev"></select></label><div id="ol-table"></div><p class="small muted">' + esc(t('olNote')) + '</p>';
@@ -1134,7 +1136,7 @@
     function upd() {
       state.kzt = Math.max(1, +$('ins-rate').value || 500); state.insLoad = Math.max(0, +$('ins-load').value || 0);
       var u = premium(R.user), b = premium(R.best), k = state.kzt, g = 1 + state.insLoad / 100;
-      $('ins-out').innerHTML = '<p class="ins-big"><b>' + money(u.el * k) + ' ₸</b><span>/ ' + (I18N.lang === 'en' ? 'ha' : 'га') + '</span></p>' +
+      $('ins-out').innerHTML = '<p class="ins-big"><b>' + money(u.el * k) + ' ₸</b><span>/ ' + Lx('ha', 'га', 'га') + '</span></p>' +
         '<p>' + esc(t('insLine', { p: pct(u.p), l: money(u.cond * k) })) + '</p><p>' + esc(t('insFair', { f: money(u.el * k), fu: money(u.el), g: money(u.el * k * g) })) + '</p>' +
         (R.best !== R.user ? '<p>' + esc(t('insBest', { b: money(b.el * k) })) + '</p>' : '');
     }
@@ -1232,7 +1234,7 @@
     html += '<button type="button" class="btn primary" id="gm-try"' + (g.left ? '' : ' disabled') + '>' + esc(t('gmTry')) + '</button></div>';
     html += '<div class="gm-board"><div class="gm-ai"><span>AI</span><div class="rot">' + rotHTML(ai.plan) + '</div><b>' + Math.round(ai.score) + '</b></div>';
     g.tries.forEach(function (tr) {
-      html += '<div class="gm-try ' + (tr.score > ai.score ? 'win' : '') + '"><span>' + esc(I18N.lang === 'en' ? 'You' : 'Вы') + '</span><div class="rot">' + rotHTML(tr.plan) + '</div><b>' + Math.round(tr.score) + '</b></div>';
+      html += '<div class="gm-try ' + (tr.score > ai.score ? 'win' : '') + '"><span>' + esc(Lx('You', 'Вы', 'Сіз')) + '</span><div class="rot">' + rotHTML(tr.plan) + '</div><b>' + Math.round(tr.score) + '</b></div>';
     });
     html += '</div><p class="gm-msg" id="gm-msg">' + (g.msg ? esc(g.msg) : '') + '</p>';
     if (!g.left) html += '<button type="button" class="link" id="gm-again">' + esc(t('gmAgain')) + '</button>';
@@ -1319,7 +1321,7 @@
       '.foot{color:#5a6670;font-size:12px;margin-top:26px}@media print{body{margin:0}}</style></head><body>' +
       '<div class="head"><div><h1>' + esc(t('ppTitle')) + '</h1><div>' + esc(t('ppFor')) + '</div></div><div>' + esc(t('title')) + '</div></div>' +
       '<div class="k"><div><span>' + esc(t('verdictPASS').length ? t('pillarReliability') : '') + '</span><b>' + pct(u.crashRate) + '%</b><span>' + esc(t('crash')) + '</span></div>' +
-      '<div><span>' + esc(t('insTitle')) + '</span><b>' + money(pr.el * k) + ' ₸/' + (I18N.lang === 'en' ? 'ha' : 'га') + '</b><span>' + esc(t('insLine', { p: pct(pr.p), l: money(pr.cond * k) })) + '</span></div>' +
+      '<div><span>' + esc(t('insTitle')) + '</span><b>' + money(pr.el * k) + ' ₸/' + Lx('ha', 'га', 'га') + '</b><span>' + esc(t('insLine', { p: pct(pr.p), l: money(pr.cond * k) })) + '</span></div>' +
       '<div><span>' + esc(t('shiTitle')) + '</span><b>' + h.value + ' / 100</b><span>' + esc(t('y50Title')) + ': ' + lossYears(R.y50.user) + ' / ' + nYearsOf(u) + '</span></div></div>' +
       '<h2>' + esc(t('ppField')) + '</h2><table>' + row(t('ppField'), esc(place)) + row(t('soil'), esc(t('clay')) + ' ' + R.soil.clay + ', ' + esc(t('sand')) + ' ' + R.soil.sand + ', ' + esc(t('soc')) + ' ' + R.soil.socGkg) +
       row(t('irrigation'), R.opts.irrigation ? R.opts.quota + ' mm' : '—') + '</table>' +

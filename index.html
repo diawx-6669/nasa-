@@ -23,7 +23,7 @@
       <a href="#method" data-i18n="navMethod"></a>
     </nav>
     <div class="lang" role="group" aria-label="Language">
-      <button type="button" data-lang="en">EN</button><button type="button" data-lang="ru">RU</button>
+      <button type="button" data-lang="en">EN</button><button type="button" data-lang="ru">RU</button><button type="button" data-lang="kk">ҚАЗ</button>
     </div>
   </div>
 </header>
@@ -270,7 +270,7 @@
           <li>Soil organic carbon: an ICBM-type balance of humified straw and root inputs against decomposition driven by temperature and moisture.</li>
           <li>Soil health: the carbon trend plus the four USDA-NRCS principles (keep the soil covered, keep living roots, maximise diversity, minimise disturbance). Erosion-risk days are days with wind of at least 6 m/s or rain of at least 20 mm.</li>
           <li>A <b>crash</b> is a season that loses more than half of the money put into the field; a <b>loss</b> is any season with negative income.</li>
-          <li>Climate scenarios: the delta method (+1.5 °C; +2.5 °C and −10% precipitation) applied to the real daily series.</li>
+          <li>Climate scenarios: the delta method (+1.5 °C; +2.5 °C and −10% precipitation; "Climate 2050": +2 °C and −10%) applied to the real daily series.</li>
           <li>Next-season outlook: this year's NASA POWER data run through the same water balance. The current soil water and the rain since 1 August are compared with the same date in every past year; the five closest autumns are analogs, and the tool shows how each crop did in the season after them.</li>
           <li>Sowing-date advisor: the whole crash test repeated with each crop sown 1–2 weeks earlier or later. Irrigation curve: the crash test repeated with seasonal quotas from 0 to 800 mm, water costs included.</li>
           <li>Whole farm: per-hectare results multiplied by the farm area; soil carbon converted to CO₂ (× 3.667).</li>
@@ -295,10 +295,35 @@
           <li>Органический углерод почвы: баланс типа ICBM между гумифицированной соломой и корнями и разложением, которое зависит от температуры и влажности.</li>
           <li>Здоровье почвы: тренд углерода плюс четыре принципа USDA-NRCS (почва закрыта, живые корни, разнообразие, минимум обработки). Опасные для эрозии дни — дни с ветром не меньше 6 м/с или дождём не меньше 20 мм.</li>
           <li><b>Авария</b> — сезон, потерявший больше половины вложенных в поле денег; <b>убыток</b> — любой сезон с отрицательным доходом.</li>
-          <li>Климатические сценарии: метод дельт (+1,5 °C; +2,5 °C и −10% осадков) к реальным суточным рядам.</li>
+          <li>Климатические сценарии: метод дельт (+1,5 °C; +2,5 °C и −10% осадков; «Климат 2050»: +2 °C и −10%) к реальным суточным рядам.</li>
           <li>Прогноз на следующий сезон: данные NASA POWER за текущий год проходят через тот же водный баланс. Запас воды в почве и осадки с 1 августа сравниваются с той же датой каждого прошлого года; пять самых похожих осеней — аналоги, и сервис показывает, как каждая культура сработала в сезон после них.</li>
           <li>Советник по срокам сева: весь краш-тест повторяется с севом каждой культуры на 1–2 недели раньше или позже. Кривая полива: краш-тест с лимитами воды от 0 до 800 мм за сезон, с учётом стоимости воды.</li>
           <li>Всё хозяйство: результаты на гектар умножаются на площадь; углерод почвы пересчитывается в CO₂ (× 3,667).</li>
+        </ul>
+      </div>
+      <div class="lb" data-l="kk">
+        <h4>Идея</h4>
+        <p>Ауыспалы егіс туралы кеңестер әдетте жалпы болады: дақылдарды әртүрлендіріңіз, топырақты жабық ұстаңыз. Краш-тест нақты. Сіз <b>өз</b> ауыспалы егісіңізді енгізесіз, ал ол NASA ауа райы бойынша <b>сіздің</b> алқабыңыздағы <b>1982 жылдан бергі әрбір нақты маусымнан</b> өткізіледі. Қай жылдар оны бұзар еді және неге екенін көресіз. Содан кейін сервис жүздеген баламаны тексеріп, шаруашылықты табыстырақ, сенімдірек, топыраққа пайдалырақ және суды үнемдейтін ететін ең кішкентай өзгерісті көрсетеді. Салмақтарды <b>сіз</b> белгілейсіз.</p>
+        <h4>NASA деректері</h4>
+        <ul>
+          <li><b>NASA POWER</b> күнделікті API (Agroclimatology), 1981–2025, алқап нүктесі үшін: ауаның ең жоғары және ең төменгі температурасы (MERRA-2), түзетілген жауын-шашын (GPCP түзетуімен MERRA-2), күн радиациясы (CERES SYN1deg / GEWEX SRB), 2 м биіктіктегі ауа ылғалдылығы мен жел.</li>
+          <li>POWER арқылы <b>MERRA-2 тамыр қабатының ылғалдылығы (GWETROOT)</b> — топырақ ылғалы моделіміздің тәуелсіз тексерісі.</li>
+          <li><b>NASA GIBS</b> арқылы <b>MODIS Terra</b> суреттері: 2000 жылдан бергі кез келген жыл үшін картадағы 16 күндік өсімдік индексі (NDVI) және 2000 және 2014 жылдардағы Арал теңізінің табиғи түстегі суреттері.</li>
+          <li>Топырақтың механикалық құрамы мен органикалық көміртегі — <b>ISRIC SoilGrids 2.0</b> (250 м). Фермер оларды зертханалық талдаумен ауыстыра алады.</li>
+        </ul>
+        <h4>Модель</h4>
+        <ul>
+          <li>POWER айнымалыларынан Пенман–Монтейт (FAO-56) бойынша күнделікті эталондық эвапотранспирация. 1984 жылға дейін күн радиациясы Харгривс формуласымен (FAO-56) бағаланады.</li>
+          <li>Тереңдігі 1,8 м екі қабатты топырақ су балансы. Қолжетімді ылғал механикалық құрам бойынша есептеледі (Saxton &amp; Rawls 2006). Ағын SCS қисығымен есептеледі. Қарды аңыз ұстайды, ол оң температуралар қосындысы бойынша ериді. Жалаңаш топырақтан булану FAO-56 екі сатылы әдісімен есептеледі.</li>
+          <li>Дақылдар: егу мерзімі температурамен анықталады, даму белсенді температуралар қосындысы бойынша жүреді, су тұтыну FAO-56 коэффициенттері мен су стресі факторы бойынша. Өнім FAO-33 суға жауабы (Ky) бойынша есептеледі. Гүлдену кезіндегі аптап, көктемгі және гүлдену кезіндегі үсік, жұқа қар астында күздік дақылдың үсіп кетуі, күзгі үсікке дейін піспеу және дақыл тым ерте оралғандағы аурулар үшін айыппұлдар бар.</li>
+          <li>Ауыспалы егістің әсері: бұршақ тұқымдастардан, сидераттан және сүдігерден кейінгі азот; жақсы алғы дақыл бонусы; дәнді дақылдан кейінгі дәнді дақыл үшін айыппұл.</li>
+          <li>Топырақтың органикалық көміртегі: гумустанған сабан мен тамырлар және температура мен ылғалдылыққа тәуелді ыдырау арасындағы ICBM типті баланс.</li>
+          <li>Топырақ денсаулығы: көміртегі үрдісі және USDA-NRCS-тің төрт қағидасы (топырақ жабық, тірі тамырлар, әртүрлілік, өңдеу аз). Эрозия қаупі бар күндер — желі кемінде 6 м/с немесе жаңбыры кемінде 20 мм күндер.</li>
+          <li><b>Апат</b> — алқапқа салынған ақшаның жартысынан көбін жоғалтқан маусым; <b>шығын</b> — кірісі теріс кез келген маусым.</li>
+          <li>Климаттық сценарийлер: нақты күнделікті қатарларға дельта әдісі (+1,5 °C; +2,5 °C және жауын-шашын −10%; «Климат 2050»: +2 °C және −10%).</li>
+          <li>Келесі маусым болжамы: осы жылғы NASA POWER деректері сол су балансынан өтеді. Топырақтағы қазіргі су қоры мен 1 тамыздан бергі жауын-шашын әр өткен жылдың сол күнімен салыстырылады; ең ұқсас бес күз — аналогтар, ал сервис олардан кейінгі маусымда әр дақылдың қалай болғанын көрсетеді.</li>
+          <li>Егу мерзімі кеңесшісі: әр дақылды 1–2 апта ерте немесе кеш еккендегі толық краш-тест. Суару қисығы: су құнын ескере отырып, маусымына 0-ден 800 мм-ге дейінгі лимиттермен краш-тест.</li>
+          <li>Бүкіл шаруашылық: гектарға шаққандағы нәтижелер шаруашылық ауданына көбейтіледі; топырақ көміртегі CO₂-ге аударылады (× 3,667).</li>
         </ul>
       </div>
     </details>
@@ -325,7 +350,8 @@
   <div class="wrap foot-in">
     <div class="foot-brand"><img src="assets/logo.svg" alt="" width="36" height="36"><div><b data-i18n="title"></b>
       <p class="lb" data-l="en">Made by a team of 9th-grade students from Astana, Kazakhstan, for NASA Space Apps Challenge 2026, challenge “Field Shift: Adapting Farms with NASA Data”.</p>
-      <p class="lb" data-l="ru">Сделано командой девятиклассников из Астаны для NASA Space Apps Challenge 2026, челлендж «Field Shift: Adapting Farms with NASA Data».</p></div></div>
+      <p class="lb" data-l="ru">Сделано командой девятиклассников из Астаны для NASA Space Apps Challenge 2026, челлендж «Field Shift: Adapting Farms with NASA Data».</p>
+      <p class="lb" data-l="kk">Астанадағы 9-сынып оқушыларының командасы NASA Space Apps Challenge 2026 үшін жасады, «Field Shift: Adapting Farms with NASA Data» челленджі.</p></div></div>
     <div class="foot-data">
       <b data-i18n="footData"></b>
       <a href="https://power.larc.nasa.gov/" rel="noopener">NASA POWER</a>
@@ -333,12 +359,13 @@
       <a href="https://gmao.gsfc.nasa.gov/reanalysis/MERRA-2/" rel="noopener">NASA MERRA-2</a>
       <a href="https://soilgrids.org/" rel="noopener">ISRIC SoilGrids</a>
     </div>
-    <p class="foot-note small"><span class="lb" data-l="en">NASA does not endorse this project.</span><span class="lb" data-l="ru">NASA не одобряет этот проект официально.</span></p>
+    <p class="foot-note small"><span class="lb" data-l="en">NASA does not endorse this project.</span><span class="lb" data-l="ru">NASA не одобряет этот проект официально.</span><span class="lb" data-l="kk">NASA бұл жобаны ресми түрде мақұлдамайды.</span></p>
   </div>
 </footer>
 
 <script src="vendor/leaflet/leaflet.js"></script>
 <script src="js/i18n.js"></script>
+<script src="js/i18n-kk.js"></script>
 <script src="js/crops.js"></script>
 <script src="js/model.js"></script>
 <script src="js/charts.js"></script>
