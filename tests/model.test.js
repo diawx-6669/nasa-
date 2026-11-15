@@ -83,3 +83,24 @@ test('every crop in the database can be simulated', () => {
     assert.ok(r.byPos[0].n > 10, c.id);
   });
 });
+
+test('sowing-date shift moves sowing by the requested number of days', () => {
+  const a = M.simulate(W, P.soil, ['wheat'], {});
+  const b = M.simulate(W, P.soil, ['wheat'], { sowShiftByCrop: { wheat: 7 } });
+  const sa = a.seasons.find(s => s.year === 2010), sb = b.seasons.find(s => s.year === 2010);
+  assert.ok(sb.sowDay - sa.sowDay >= 7, 'sow ' + sa.sowDay + ' -> ' + sb.sowDay);
+});
+
+test('autumn analog years: picks past years only and ranks the current autumn', () => {
+  // pretend the record ends on 12 Nov 2025 (a partial current year)
+  const n = M.dayIndex(W, 2025, 316) + 1;
+  const raw = { start: P.weather.start, elev: P.weather.elev, n };
+  ['T2M_MAX', 'T2M_MIN', 'PRECTOTCORR', 'ALLSKY_SFC_SW_DWN', 'RH2M', 'WS2M', 'GWETROOT'].forEach(k => { raw[k] = P.weather[k].slice(0, n); });
+  const W2 = M.prepareWeather(raw, P.lat);
+  const run = M.simulate(W2, P.soil, ['wheat'], { detail: true, includePartial: true });
+  const a = M.analogYears(W2, run.dailyWet, 5);
+  assert.strictEqual(a.year, 2025);
+  assert.strictEqual(a.analogs.length, 5);
+  assert.ok(a.analogs.every(h => h.year < 2024));
+  assert.ok(a.wetPct >= 0 && a.wetPct <= 100);
+});

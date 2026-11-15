@@ -214,7 +214,7 @@
 
     // first simulated slot year is firstYear+1 (first year = spin-up of soil water)
     var Y0 = W.firstYear + 1;
-    var nSlots = W.lastYear - Y0 + 1;
+    var nSlots = (opts.includePartial ? W.year[W.n - 1] : W.lastYear) - Y0 + 1;
     var seasons = [];
     var fieldFree = 0;      // day index when the field becomes free
     var day = 0;
@@ -347,6 +347,9 @@
       var year = Y0 + i;
       var open = windowOpen(c, year);
       var never = open < 0;
+      // optional sowing-date shift (days) for the sowing-date advisor
+      var sh = (opts.sowShiftByCrop && opts.sowShiftByCrop[c.id]) || opts.sowShift || 0;
+      if (!never && sh) open = Math.max(0, open + sh);
       if (never) open = Math.max(0, dayIndex(W, c.winter ? year - 1 : year, c.winter ? 260 : 130) + shift);
       var win = c.sowWindow || 0;
       var maxLen = c.winter ? 345 : (c.fallow ? 150 : 170);
@@ -872,7 +875,47 @@
     };
   }
 
+  /**
+   * Autumn analog years for next-season planning.
+   * W must contain the current (incomplete) year at its end; dailyWet is the modelled profile
+   * wetness from simulate(..., {detail:true}) with bare soil (plan ['fallow']), so every year,
+   * including the current one, is computed the same way from NASA POWER rain and evaporation.
+   * Compares soil water on the last available day and rain since 1 August (1 February in the south).
+   */
+  function analogYears(W, dailyWet, nAnalogs) {
+    nAnalogs = nAnalogs || 5;
+    var lastIdx = W.n - 1, cy = W.year[lastIdx], lastDoy = W.doy[lastIdx];
+    var rainFrom = W.lat >= 0 ? 213 : 32;
+    if (lastDoy <= rainFrom + 20) rainFrom = Math.max(1, lastDoy - 90);
+    function stats(y) {
+      var s0 = dayIndex(W, y, 1);
+      if (s0 < 0 || s0 + lastDoy - 1 >= W.n) return null;
+      var p = 0, w = 0, nw = 0;
+      for (var d = rainFrom; d <= lastDoy; d++) p += W.prec[s0 + d - 1];
+      for (d = lastDoy - 6; d <= lastDoy; d++) { w += dailyWet[s0 + d - 1]; nw++; }
+      return { year: y, prec: p, wet: w / nw };
+    }
+    var cur = stats(cy);
+    var hist = [];
+    for (var y = W.firstYear + 1; y < cy; y++) { var st = stats(y); if (st) hist.push(st); }
+    function msd(key) {
+      var arr = hist.map(function (h) { return h[key]; }), m = arr.reduce(function (x, z) { return x + z; }, 0) / arr.length;
+      return { m: m, s: Math.sqrt(arr.reduce(function (x, z) { return x + (z - m) * (z - m); }, 0) / arr.length) || 1 };
+    }
+    var mp = msd('prec'), mw = msd('wet');
+    hist.forEach(function (h) { h.d = Math.sqrt(Math.pow((h.prec - cur.prec) / mp.s, 2) + Math.pow((h.wet - cur.wet) / mw.s, 2)); });
+    function rankPct(key) { return Math.round(hist.filter(function (h) { return h[key] < cur[key]; }).length / hist.length * 100); }
+    var usable = hist.filter(function (h) { return h.year < cy - 1; }); // the following season must be in the record
+    usable.sort(function (a, b) { return a.d - b.d; });
+    return {
+      year: cy, lastIdx: lastIdx, lastDoy: lastDoy, rainFrom: rainFrom, cur: cur,
+      wetPct: rankPct('wet'), precPct: rankPct('prec'), meanWet: mw.m, meanPrec: mp.m,
+      analogs: usable.slice(0, nAnalogs), hist: hist
+    };
+  }
+
   var api = {
+    analogYears: analogYears,
     prepareWeather: prepareWeather, et0PM: et0PM, soilHydraulics: soilHydraulics,
     rotationEffects: rotationEffects, simulate: simulate, crashTest: crashTest, reprice: reprice,
     pillars: pillars, scoreAll: scoreAll, enumeratePlans: enumeratePlans, neighbourPlans: neighbourPlans,

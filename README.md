@@ -27,6 +27,12 @@ Car makers crash-test a car before anyone drives it. We do the same for a farmer
    - **What if prices change?**: a ±20 % price slider that re-ranks every tested rotation and shows whether the recommendation still holds;
    - a **NASA MODIS NDVI layer** (NASA GIBS) on the map for any year since 2000, and a before/after comparison of the **Aral Sea in 2000 and 2014** (MODIS Terra true colour) linked to an irrigated Kyzylorda farm;
    - charts of income, the soil-carbon trend, the farm's climate fingerprint, and a check of our model against NASA's own soil-moisture product;
+   - **Next season outlook**: this year's NASA POWER data (the latest available day) show how much water the field holds now compared with every past autumn; the five most similar autumns point to the crop that did best in the following season;
+   - **When to sow**: each crop sown 1–2 weeks earlier or later, with income and crash rate for each choice;
+   - **How much irrigation water pays off**: income and crashes for seasonal quotas from 0 to 800 mm;
+   - **Side-by-side comparison** of your rotation with any alternative;
+   - **Your whole farm**: totals for the farm area and the soil-carbon difference in tonnes of CO₂ and dollars at a chosen carbon price;
+   - a **link** that reopens the same test (location, rotation, priorities) on another computer;
    - a printable report and a downloadable season-by-season calculation (CSV with weather, water need and use, yield and profit, plus all inputs).
 
 ## NASA data

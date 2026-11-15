@@ -130,6 +130,8 @@
       <div id="worst-years" class="worst"></div>
     </div>
 
+    <div class="panel outlook" id="outlook"></div>
+
     <div class="panel">
       <h3 data-i18n="mapTitle"></h3>
       <p class="muted small" data-i18n="mapHint"></p>
@@ -147,15 +149,33 @@
       </div>
     </div>
 
+    <div class="panel cmp" id="cmp" hidden></div>
+
     <div class="panel">
       <h3 data-i18n="altTitle"></h3>
       <div class="table-wrap"><table id="alts" class="alts"></table></div>
+    </div>
+
+    <div class="panel" id="sowing"></div>
+
+    <div class="cols">
+      <div class="panel" id="water"></div>
+      <div class="panel farm" id="farm">
+        <h3 data-i18n="farmTitle"></h3>
+        <div class="row">
+          <label class="field"><span data-i18n="farmArea"></span><input id="farm-area" type="number" min="1" step="10" value="1000"></label>
+          <label class="field"><span data-i18n="farmCarbon"></span><input id="farm-carbon" type="number" min="0" step="1" value="20"></label>
+        </div>
+        <div id="farm-out"></div>
+        <p class="small muted" data-i18n="farmNote"></p>
+      </div>
     </div>
 
     <div class="cols">
       <div class="panel" id="risk"></div>
       <div class="panel" id="price"></div>
     </div>
+
 
     <div class="panel">
       <h3 data-i18n="scTitle"></h3>
@@ -172,6 +192,7 @@
     <div class="actions">
       <button type="button" class="btn ghost" id="btn-csv" data-i18n="csv"></button>
       <button type="button" class="btn ghost" id="btn-print" data-i18n="print"></button>
+      <button type="button" class="btn ghost" id="btn-share" data-i18n="share"></button>
     </div>
   </section>
 
@@ -213,6 +234,9 @@
           <li>Soil health: the carbon trend plus the four USDA-NRCS principles (keep the soil covered, keep living roots, maximise diversity, minimise disturbance). Erosion-risk days are days with wind of at least 6 m/s or rain of at least 20 mm.</li>
           <li>A <b>crash</b> is a season that loses more than half of the money put into the field; a <b>loss</b> is any season with negative income.</li>
           <li>Climate scenarios: the delta method (+1.5 °C; +2.5 °C and −10% precipitation) applied to the real daily series.</li>
+          <li>Next-season outlook: this year's NASA POWER data run through the same water balance. The current soil water and the rain since 1 August are compared with the same date in every past year; the five closest autumns are analogs, and the tool shows how each crop did in the season after them.</li>
+          <li>Sowing-date advisor: the whole crash test repeated with each crop sown 1–2 weeks earlier or later. Irrigation curve: the crash test repeated with seasonal quotas from 0 to 800 mm, water costs included.</li>
+          <li>Whole farm: per-hectare results multiplied by the farm area; soil carbon converted to CO₂ (× 3.667).</li>
         </ul>
       </div>
       <div class="lb" data-l="ru">
@@ -235,6 +259,9 @@
           <li>Здоровье почвы: тренд углерода плюс четыре принципа USDA-NRCS (почва закрыта, живые корни, разнообразие, минимум обработки). Опасные для эрозии дни — дни с ветром не меньше 6 м/с или дождём не меньше 20 мм.</li>
           <li><b>Авария</b> — сезон, потерявший больше половины вложенных в поле денег; <b>убыток</b> — любой сезон с отрицательным доходом.</li>
           <li>Климатические сценарии: метод дельт (+1,5 °C; +2,5 °C и −10% осадков) к реальным суточным рядам.</li>
+          <li>Прогноз на следующий сезон: данные NASA POWER за текущий год проходят через тот же водный баланс. Запас воды в почве и осадки с 1 августа сравниваются с той же датой каждого прошлого года; пять самых похожих осеней — аналоги, и сервис показывает, как каждая культура сработала в сезон после них.</li>
+          <li>Советник по срокам сева: весь краш-тест повторяется с севом каждой культуры на 1–2 недели раньше или позже. Кривая полива: краш-тест с лимитами воды от 0 до 800 мм за сезон, с учётом стоимости воды.</li>
+          <li>Всё хозяйство: результаты на гектар умножаются на площадь; углерод почвы пересчитывается в CO₂ (× 3,667).</li>
         </ul>
       </div>
     </details>
