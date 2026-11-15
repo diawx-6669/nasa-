@@ -234,6 +234,20 @@
         box.appendChild(b);
       });
       $('hero-axis').innerHTML = '<span>' + years[0] + '</span><span>' + years[Math.floor(years.length / 2)] + '</span><span>' + years[years.length - 1] + '</span>';
+      // living field: every real year plays across the hero
+      var bars = box.children, info = vals.map(function (v) {
+        var y = +v.y, s0 = M.dayIndex(W, y, W.lat >= 0 ? 121 : 305), rain = 0, wind = 0, n = 0;
+        for (var k = s0; k < s0 + 123 && k < W.n; k++) { rain += W.prec[k]; wind += W.ws[k]; n++; }
+        return { year: y, cls: v.cls, rain: rain, wind: n ? wind / n : 0, m: v.m };
+      });
+      var mw = mean(info.map(function (x) { return x.wind; })) || 1;
+      var rs = info.map(function (x) { return x.rain; }).sort(function (a, b) { return a - b; }), wet = rs[Math.floor(rs.length * 0.7)];
+      info.forEach(function (x) { x.wind = x.wind / mw; x.rainy = x.rain >= wet; });
+      HeroField.start($('field'), info, function (Y, i) {
+        for (var b = 0; b < bars.length; b++) bars[b].classList.toggle('cur', b === i);
+        var lab = Y.cls === 'crash' ? t('crashShort') : t(Y.cls);
+        $('hero-year').innerHTML = '<b>' + Y.year + '</b><span class="hy-' + Y.cls + '">' + esc(lab) + '</span><em>' + Math.round(Y.rain) + ' mm · ' + money(Y.m) + ' $/ha</em>';
+      });
     }).catch(function () { /* hero strip is decorative */ });
   }
 
@@ -1429,7 +1443,10 @@
   }
 
   function init() {
+    HeroField.intro();
     drawFurrows();
+    var hero = document.querySelector('.hero');
+    hero.addEventListener('mousemove', function (e) { var r = hero.getBoundingClientRect(); hero.style.setProperty('--mx', (e.clientX - r.left) + 'px'); hero.style.setProperty('--my', (e.clientY - r.top) + 'px'); });
     FX.initChrome();
     initRunbar();
     FX.spy(document.querySelectorAll('.nav a'));

@@ -29,6 +29,8 @@
 </header>
 
 <section class="hero" id="top">
+  <canvas class="field" id="field" aria-hidden="true"></canvas>
+  <div class="hero-shade" aria-hidden="true"></div>
   <svg class="furrows" aria-hidden="true" preserveAspectRatio="none" viewBox="0 0 1200 600"><defs><linearGradient id="fg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c9922e" stop-opacity="0"/><stop offset="1" stop-color="#c9922e" stop-opacity=".22"/></linearGradient></defs><g stroke="url(#fg)" stroke-width="1.2" fill="none" id="furrow-lines"></g></svg>
   <div class="wrap hero-in">
     <div class="hero-text">
@@ -39,6 +41,7 @@
     <figure class="strip" aria-hidden="false">
       <div class="strip-bars" id="hero-strip"></div>
       <div class="strip-axis" id="hero-axis"></div>
+      <div class="hero-year" id="hero-year" aria-live="off"></div>
       <div class="strip-key"><span><i class="k-ok"></i><b data-i18n="ok"></b></span><span><i class="k-dent"></i><b data-i18n="dent"></b></span><span><i class="k-crash"></i><b data-i18n="crashShort"></b></span></div>
       <figcaption data-i18n="heroStripCaption"></figcaption>
     </figure>
@@ -371,6 +374,7 @@
 <script src="js/charts.js"></script>
 <script src="data/presets/index.js"></script>
 <script src="js/fx.js"></script>
+<script src="js/hero.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
