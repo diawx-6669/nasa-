@@ -4,6 +4,12 @@
   var S = {
     en: {
       title: 'Crop Rotation Crash Test',
+      snSummary: 'Summary', snNext: 'Next season', snMap: 'Crash map', snAlts: 'Alternatives', snSow: 'Sowing & water', snRisk: 'Risk & prices', snCharts: 'Charts',
+      tplTitle: 'Start from a typical rotation',
+      tpl: { classic: 'Classic steppe', mono: 'Wheat every year', pulses: 'With pulses', oil: 'With oilseeds', soil: 'Soil builder', south: 'Irrigated south' },
+      rbDays: 'days of NASA weather per field', rbYears: 'years, 1981–2025', rbCrops: 'crops and fallow options', rbRot: 'rotations tested per run',
+      rbYour: 'Your rotation', rfTitle: 'Crash-testing your rotation', rfN: '{i} of {n} rotations, season {y}',
+      toastData: 'NASA POWER: {days} days loaded', toastDone: 'Crash test finished: {n} rotations in {s} s',
       olTitle: 'Next season: what to sow in {y}',
       olLoading: 'Downloading this year\'s NASA POWER data for the field…',
       olFail: 'This year\'s NASA data could not be downloaded ({err}). The outlook needs an internet connection.',
@@ -161,6 +167,12 @@
     },
     ru: {
       title: 'Краш-тест севооборота',
+      snSummary: 'Итог', snNext: 'Следующий сезон', snMap: 'Карта аварий', snAlts: 'Альтернативы', snSow: 'Сев и вода', snRisk: 'Риск и цены', snCharts: 'Графики',
+      tplTitle: 'Начать с типичного севооборота',
+      tpl: { classic: 'Классика степи', mono: 'Пшеница каждый год', pulses: 'С бобовыми', oil: 'С масличными', soil: 'Для почвы', south: 'Орошаемый юг' },
+      rbDays: 'дней погоды NASA на каждое поле', rbYears: 'лет, 1981–2025', rbCrops: 'культур и вариантов пара', rbRot: 'севооборотов за один запуск',
+      rbYour: 'Ваш севооборот', rfTitle: 'Краш-тест вашего севооборота', rfN: '{i} из {n} севооборотов, сезон {y}',
+      toastData: 'NASA POWER: загружено {days} дней', toastDone: 'Краш-тест готов: {n} севооборотов за {s} с',
       olTitle: 'Следующий сезон: что сеять в {y} году',
       olLoading: 'Скачиваем данные NASA POWER за этот год для поля…',
       olFail: 'Данные NASA за этот год скачать не удалось ({err}). Для прогноза нужен интернет.',

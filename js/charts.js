@@ -78,7 +78,8 @@
         var y0 = yl(Math.max(r.min, Math.min(r.max, 0)), r), y1 = yl(val, r);
         var rect = el('rect', {
           x: m.l + band * i + band * 0.1 + bw * bi, y: Math.min(y0, y1), width: Math.max(1, bw - 1), height: Math.max(0.5, Math.abs(y1 - y0)),
-          fill: typeof s.color === 'function' ? s.color(val, i) : s.color, rx: 1.5
+          fill: typeof s.color === 'function' ? s.color(val, i) : s.color, rx: 1.5,
+          class: 'bar-g', style: 'animation-delay:' + Math.min(900, i * 14) + 'ms'
         }, svg);
         var ti = el('title', {}, rect); ti.textContent = (s.title ? s.title(i) : opts.x[i] + ': ' + fmtNum(val));
       });
@@ -90,7 +91,9 @@
         if (val === null || isNaN(val)) return;
         d += (d ? 'L' : 'M') + xc(i).toFixed(1) + ',' + yl(val, r).toFixed(1);
       });
-      el('path', { d: d, fill: 'none', stroke: s.color, 'stroke-width': s.width || 2.2, 'stroke-dasharray': s.dash || '', 'stroke-linejoin': 'round' }, svg);
+      var pa = { d: d, fill: 'none', stroke: s.color, 'stroke-width': s.width || 2.2, 'stroke-linejoin': 'round' };
+      if (s.dash) { pa['stroke-dasharray'] = s.dash; pa['class'] = 'fade'; } else { pa.pathLength = 1; pa['class'] = 'draw'; }
+      el('path', pa, svg);
       if (s.dots !== false) {
         s.values.forEach(function (val, i) {
           if (val === null || isNaN(val)) return;

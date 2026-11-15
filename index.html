@@ -43,11 +43,18 @@
       <figcaption data-i18n="heroStripCaption"></figcaption>
     </figure>
   </div>
+  <div class="wrap ribbon" id="ribbon">
+    <div><b data-count="16436"></b><span data-i18n="rbDays"></span></div>
+    <div><b data-count="45"></b><span data-i18n="rbYears"></span></div>
+    <div><b data-count="15"></b><span data-i18n="rbCrops"></span></div>
+    <div><b data-count="800" data-suffix="+"></b><span data-i18n="rbRot"></span></div>
+  </div>
   <p class="wrap hero-data" data-i18n="heroData"></p>
+  <div class="scan" aria-hidden="true"></div>
 </section>
 
 <main class="wrap">
-  <section class="step" id="step-farm">
+  <section class="step reveal" id="step-farm">
     <header class="step-h"><span class="step-n">1</span><div><h2 data-i18n="step1"></h2><p class="muted" data-i18n="step1Hint"></p></div></header>
     <div class="farm-grid">
       <div class="map-col">
@@ -89,12 +96,13 @@
     </div>
   </section>
 
-  <section class="step" id="step-plan">
+  <section class="step reveal" id="step-plan">
     <header class="step-h"><span class="step-n">2</span><div><h2 data-i18n="step2"></h2><p class="muted" data-i18n="planHint"></p></div></header>
+    <div class="tpl-row"><span class="label" data-i18n="tplTitle"></span><div id="tpls" class="chips tpls"></div></div>
     <ol id="plan" class="plan"></ol>
   </section>
 
-  <section class="step" id="step-prio">
+  <section class="step reveal" id="step-prio">
     <header class="step-h"><span class="step-n">3</span><div><h2 data-i18n="step3"></h2><p class="muted" data-i18n="prioHint"></p></div></header>
     <div class="sliders">
       <label><span data-i18n="pProfit"></span><output></output><input type="range" min="0" max="5" value="3" id="w-profit"></label>
@@ -122,45 +130,54 @@
   </section>
 
   <section id="results" class="report" hidden>
-    <div class="verdict" id="verdict"></div>
+    <nav class="subnav" id="subnav" aria-label="Report sections">
+      <a href="#verdict" data-i18n="snSummary"></a>
+      <a href="#outlook" data-i18n="snNext"></a>
+      <a href="#p-map" data-i18n="snMap"></a>
+      <a href="#p-alts" data-i18n="snAlts"></a>
+      <a href="#sowing" data-i18n="snSow"></a>
+      <a href="#risk" data-i18n="snRisk"></a>
+      <a href="#p-charts" data-i18n="snCharts"></a>
+    </nav>
+    <div class="verdict reveal" id="verdict"></div>
 
-    <div class="panel">
+    <div class="panel reveal">
       <h3 data-i18n="findings"></h3>
       <ul id="findings" class="findings"></ul>
       <div id="worst-years" class="worst"></div>
     </div>
 
-    <div class="panel outlook" id="outlook"></div>
+    <div class="panel reveal outlook" id="outlook"></div>
 
-    <div class="panel">
+    <div class="panel reveal" id="p-map">
       <h3 data-i18n="mapTitle"></h3>
       <p class="muted small" data-i18n="mapHint"></p>
       <div id="crashmap" class="crashmap"></div>
       <div class="legend" id="crashmap-legend"></div>
     </div>
 
-    <div class="panel why" id="why" tabindex="-1"></div>
+    <div class="panel reveal why" id="why" tabindex="-1"></div>
 
     <div class="cols">
-      <div class="panel accent" id="fix"></div>
-      <div class="panel">
+      <div class="panel reveal accent" id="fix"></div>
+      <div class="panel reveal">
         <h3 data-i18n="perCrop"></h3>
         <div class="table-wrap"><table id="percrop"></table></div>
       </div>
     </div>
 
-    <div class="panel cmp" id="cmp" hidden></div>
+    <div class="panel reveal cmp" id="cmp" hidden></div>
 
-    <div class="panel">
+    <div class="panel reveal" id="p-alts">
       <h3 data-i18n="altTitle"></h3>
       <div class="table-wrap"><table id="alts" class="alts"></table></div>
     </div>
 
-    <div class="panel" id="sowing"></div>
+    <div class="panel reveal" id="sowing"></div>
 
     <div class="cols">
-      <div class="panel" id="water"></div>
-      <div class="panel farm" id="farm">
+      <div class="panel reveal" id="water"></div>
+      <div class="panel reveal farm" id="farm">
         <h3 data-i18n="farmTitle"></h3>
         <div class="row">
           <label class="field"><span data-i18n="farmArea"></span><input id="farm-area" type="number" min="1" step="10" value="1000"></label>
@@ -172,22 +189,22 @@
     </div>
 
     <div class="cols">
-      <div class="panel" id="risk"></div>
-      <div class="panel" id="price"></div>
+      <div class="panel reveal" id="risk"></div>
+      <div class="panel reveal" id="price"></div>
     </div>
 
 
-    <div class="panel">
+    <div class="panel reveal">
       <h3 data-i18n="scTitle"></h3>
       <div class="table-wrap"><table id="sctable"></table></div>
     </div>
 
-    <div class="cols">
-      <div class="panel"><h3 data-i18n="chIncome"></h3><div id="ch-income"></div></div>
-      <div class="panel"><h3 data-i18n="chSoil"></h3><div id="ch-soil"></div></div>
+    <div class="cols" id="p-charts">
+      <div class="panel reveal"><h3 data-i18n="chIncome"></h3><div id="ch-income"></div></div>
+      <div class="panel reveal"><h3 data-i18n="chSoil"></h3><div id="ch-soil"></div></div>
     </div>
-    <div class="panel"><h3 data-i18n="chClimate"></h3><div id="ch-climate"></div><p class="small muted" id="ch-climate-hint"></p></div>
-    <div class="panel"><h3 data-i18n="chValid"></h3><div id="ch-valid"></div><p class="small muted" id="ch-valid-hint"></p></div>
+    <div class="panel reveal"><h3 data-i18n="chClimate"></h3><div id="ch-climate"></div><p class="small muted" id="ch-climate-hint"></p></div>
+    <div class="panel reveal"><h3 data-i18n="chValid"></h3><div id="ch-valid"></div><p class="small muted" id="ch-valid-hint"></p></div>
 
     <div class="actions">
       <button type="button" class="btn ghost" id="btn-csv" data-i18n="csv"></button>
@@ -196,7 +213,7 @@
     </div>
   </section>
 
-  <section class="step sat" id="sat">
+  <section class="step reveal sat" id="sat">
     <h2 data-i18n="satTitle"></h2>
     <p class="lead-s" data-i18n="satLead"></p>
     <div class="compare" id="compare">
@@ -211,7 +228,7 @@
     <button type="button" class="btn ghost" id="btn-kyz" data-i18n="satLoad"></button>
   </section>
 
-  <section class="step method" id="method">
+  <section class="step reveal method" id="method">
     <details>
       <summary><h2 data-i18n="method"></h2></summary>
       <div class="lb" data-l="en">
@@ -268,6 +285,22 @@
   </section>
 </main>
 
+<div class="runbar" id="runbar" aria-hidden="true">
+  <div class="wrap runbar-in">
+    <div class="rb-text"><span class="small muted" data-i18n="rbYour"></span><div class="rot" id="rb-plan"></div></div>
+    <button type="button" class="btn primary" id="rb-run" data-i18n="run"></button>
+  </div>
+</div>
+<div class="runfx" id="runfx" hidden>
+  <div class="runfx-card" role="status">
+    <div class="runfx-k" data-i18n="rfTitle"></div>
+    <div class="runfx-year" id="rf-year">1982</div>
+    <div class="runfx-road"><i id="rf-car"></i></div>
+    <div class="runfx-bar"><div id="rf-bar"></div></div>
+    <div class="runfx-n small" id="rf-n"></div>
+  </div>
+</div>
+
 <footer class="foot">
   <div class="wrap foot-in">
     <div class="foot-brand"><img src="assets/logo.svg" alt="" width="36" height="36"><div><b data-i18n="title"></b>
@@ -290,6 +323,7 @@
 <script src="js/model.js"></script>
 <script src="js/charts.js"></script>
 <script src="data/presets/index.js"></script>
+<script src="js/fx.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
